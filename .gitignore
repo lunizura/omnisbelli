@@ -1,0 +1,15 @@
+# Omnisbelli Git Ignore
+build/
+bin/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.log
+.vs/
+.vscode/
+cmake-build-*/
+out/
