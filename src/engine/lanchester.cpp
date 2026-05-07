@@ -268,3 +268,5 @@ void LanchesterCombat::compute_combat_tick(
 }
 
 } // namespace omnisbelli
+
+// Linear bottleneck front width constraints active
