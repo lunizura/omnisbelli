@@ -108,6 +108,33 @@ void test_excess_damage_cascade() {
               << (int)tel.attacker_casualties_step << " total kills).\n";
 }
 
+void test_synapse_disruption() {
+    std::cout << "[TEST] 3. Synapse Network & Instinctive Frenzy..." << std::endl;
+    ArmyRoster swarm = ArmyRoster::create_tyranid_swarm(1.0);
+    SynapseNetwork syn;
+
+    syn.update(swarm, 0.1);
+    OMNIS_ASSERT(syn.current_state == SynapseCoherenceState::COORDINATED);
+    OMNIS_ASSERT(syn.get_attack_multiplier() == 1.0);
+    OMNIS_ASSERT(syn.get_casualty_multiplier() == 1.0);
+
+    // Kill all Synapse nodes (Warriors, Zoanthropes, Bio-Titans, Swarmlord)
+    for (auto& u : swarm.units) {
+        if (u.is_synapse) {
+            u.apply_direct_casualties(u.count);
+        }
+    }
+
+    syn.update(swarm, 1.0);
+    OMNIS_ASSERT(syn.current_state == SynapseCoherenceState::INSTINCTIVE_FERAL);
+    OMNIS_ASSERT(syn.is_in_instinctive_frenzy());
+    OMNIS_ASSERT(std::abs(syn.get_attack_multiplier() - 0.30) < 1e-4); // -70% attack penalty
+    OMNIS_ASSERT(std::abs(syn.get_casualty_multiplier() - 2.00) < 1e-4); // 2.0x casualties taken
+    OMNIS_ASSERT(syn.total_feral_infighting_casualties > 0.0); // Feral infighting active
+
+    std::cout << "       PASS: Synapse disruption correctly triggered Instinctive Behavior (Feral Frenzy).\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -116,9 +143,10 @@ int main() {
     test_unit_mechanics();
     test_lanchester_laws();
     test_excess_damage_cascade();
+    test_synapse_disruption();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 3 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 4 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
