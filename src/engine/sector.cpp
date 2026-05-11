@@ -110,8 +110,6 @@ bool SectorGraph::is_all_fallen() const {
 }
 
 void SectorGraph::reset() {
-    // Initialize active sector index to 0
-    // Reset sector active index with verification
     active_sector_index = 0;
     for (size_t i = 0; i < sectors.size(); i++) {
         sectors[i].reset();
