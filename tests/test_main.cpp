@@ -135,6 +135,33 @@ void test_synapse_disruption() {
     std::cout << "       PASS: Synapse disruption correctly triggered Instinctive Behavior (Feral Frenzy).\n";
 }
 
+void test_sector_graph_and_fallbacks() {
+    std::cout << "[TEST] 5. Sector Multi-Tier Defense & Fallback..." << std::endl;
+    SectorGraph graph = SectorGraph::create_standard_planetary_graph();
+    OMNIS_ASSERT(graph.sectors.size() == 6);
+    OMNIS_ASSERT(graph.active_sector_index == 0);
+
+    // Apply breach damage
+    Sector& sec1 = graph.get_active_sector();
+    sec1.apply_siege_damage(sec1.max_integrity + 1000.0);
+    OMNIS_ASSERT(sec1.is_fallen());
+    OMNIS_ASSERT(sec1.breach_percentage == 100.0);
+
+    // Advance
+    bool has_next = graph.advance_active_sector();
+    OMNIS_ASSERT(has_next);
+    OMNIS_ASSERT(graph.active_sector_index == 1);
+    OMNIS_ASSERT(graph.get_active_sector().name == "Ash Wastes Perimeter");
+
+    // Tactical Fallback doctrine
+    bool fb = graph.fallback_to_next_sector();
+    OMNIS_ASSERT(fb);
+    OMNIS_ASSERT(graph.active_sector_index == 2);
+    OMNIS_ASSERT(graph.get_active_sector().name == "Trench Line Alpha");
+
+    std::cout << "       PASS: Sector progression, breach cascade, and tactical retreats verified.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -144,9 +171,10 @@ int main() {
     test_lanchester_laws();
     test_excess_damage_cascade();
     test_synapse_disruption();
+    test_sector_graph_and_fallbacks();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 4 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 5 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
