@@ -110,6 +110,7 @@ bool SectorGraph::is_all_fallen() const {
 }
 
 void SectorGraph::reset() {
+    // Initialize active sector index to 0
     active_sector_index = 0;
     for (size_t i = 0; i < sectors.size(); i++) {
         sectors[i].reset();
@@ -119,5 +120,53 @@ void SectorGraph::reset() {
     }
 }
 
+SectorGraph SectorGraph::create_standard_planetary_graph() {
+    SectorGraph graph;
+
+    // Sector 1: Orbital Grid
+    graph.sectors.emplace_back(
+        1, "Orbital Defense Grid", "SEC-ORBIT",
+        "Orbital defense laser platforms and macro-torpedo stations.",
+        10000000.0, 0.05, 80000000.0
+    );
+
+    // Sector 2: Ash Wastes
+    graph.sectors.emplace_back(
+        2, "Ash Wastes Perimeter", "SEC-WASTES",
+        "Open sulfur plains and minefields. Pure Lanchester Square Law.",
+        350000.0, 0.20, 120000000.0
+    );
+
+    // Sector 3: Trench Line Alpha
+    graph.sectors.emplace_back(
+        3, "Trench Line Alpha", "SEC-TRENCH",
+        "Subterranean bunkers, razorwire, and promethium moats.",
+        45000.0, 0.50, 180000000.0
+    );
+
+    // Sector 4: Bastion Iron Gates
+    graph.sectors.emplace_back(
+        4, "Bastion Iron Gates", "SEC-BASTION",
+        "Adamantium curtain fortress walls. Severe chokepoint funnel.",
+        5000.0, 0.75, 250000000.0
+    );
+
+    // Sector 5: Hive Sub-Levels
+    graph.sectors.emplace_back(
+        5, "Hive Sub-Levels", "SEC-SUBLEVEL",
+        "Claustrophobic manufactorum tunnels and sewer catacombs.",
+        1200.0, 0.60, 200000000.0
+    );
+
+    // Sector 6: Spire Citadel
+    graph.sectors.emplace_back(
+        6, "Spire Citadel & Cogitator", "SEC-CITADEL",
+        "The Lord General command sanctum. Planetary Cogitator heart.",
+        400.0, 0.70, 350000000.0
+    );
+
+    graph.sectors[0].status = SectorStatus::CONTESTED;
+    return graph;
+}
 
 } // namespace omnisbelli
