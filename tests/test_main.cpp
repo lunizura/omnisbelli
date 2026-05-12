@@ -162,6 +162,30 @@ void test_sector_graph_and_fallbacks() {
     std::cout << "       PASS: Sector progression, breach cascade, and tactical retreats verified.\n";
 }
 
+void test_logistics_depletion() {
+    std::cout << "[TEST] 4. Munitions Logistics & Weapon Starvation..." << std::endl;
+    LogisticsSystem log;
+    log.artillery_shells = 100.0; // Small stockpile
+
+    // Drain shells
+    double eff1 = log.consume_ammo(AmmoType::AMMO_ARTILLERY_SHELLS, 80.0);
+    OMNIS_ASSERT(eff1 == 1.0);
+    OMNIS_ASSERT(std::abs(log.artillery_shells - 20.0) < 1e-4);
+
+    double eff2 = log.consume_ammo(AmmoType::AMMO_ARTILLERY_SHELLS, 50.0);
+    OMNIS_ASSERT(eff2 < 1.0);
+    OMNIS_ASSERT(log.artillery_shells == 0.0);
+    OMNIS_ASSERT(log.get_efficiency(AmmoType::AMMO_ARTILLERY_SHELLS) < 0.10);
+
+    // Promethium check
+    OMNIS_ASSERT(log.can_afford_promethium(15000.0));
+    bool burned = log.consume_promethium(15000.0);
+    OMNIS_ASSERT(burned);
+    OMNIS_ASSERT(log.total_promethium_burned == 15000.0);
+
+    std::cout << "       PASS: Ammo consumption, dry fire degradation, and fuel expenditure verified.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -172,9 +196,10 @@ int main() {
     test_excess_damage_cascade();
     test_synapse_disruption();
     test_sector_graph_and_fallbacks();
+    test_logistics_depletion();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 5 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 6 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
