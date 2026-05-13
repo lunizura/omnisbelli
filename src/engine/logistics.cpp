@@ -8,7 +8,7 @@ LogisticsSystem::LogisticsSystem()
       bolter_rounds(3500000.0), bolter_max_rounds(3500000.0), bolter_resupply_per_sec(200.0),
       artillery_shells(850000.0), artillery_max_shells(850000.0), artillery_resupply_per_sec(40.0),
       promethium_liters(120000.0), promethium_max_liters(120000.0),
-      titan_plasma_heat(0.0), titan_plasma_cooling_per_sec(1.0),
+      titan_plasma_heat(0.0), titan_plasma_cooling_per_sec(1.5),
       total_bolter_fired(0.0), total_artillery_fired(0.0), total_promethium_burned(0.0) {}
 
 void LogisticsSystem::update(double dt) {
