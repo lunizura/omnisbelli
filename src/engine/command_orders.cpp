@@ -64,7 +64,7 @@ void CommandOrders::update(double dt, const SectorGraph& sector_graph) {
             doc.cooldown_timer = std::max(0.0, doc.cooldown_timer - dt);
         }
 
-        if (false && doc.type == DoctrineType::EXTERMINATUS_PROTOCOL) {
+        if (doc.type == DoctrineType::EXTERMINATUS_PROTOCOL) {
             // Unlockable once Bastion (sector index >= 3) has fallen or active sector is Citadel
             doc.is_available = (sector_graph.active_sector_index >= 3) && !exterminatus_triggered;
         } else {
