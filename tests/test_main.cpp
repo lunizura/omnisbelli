@@ -186,6 +186,25 @@ void test_logistics_depletion() {
     std::cout << "       PASS: Ammo consumption, dry fire degradation, and fuel expenditure verified.\n";
 }
 
+void test_monte_carlo_projections() {
+    std::cout << "[TEST] 7. Monte Carlo Planetary Outcome Projections..." << std::endl;
+    ArmyRoster def = ArmyRoster::create_imperial_defense(1.0);
+    ArmyRoster att = ArmyRoster::create_tyranid_swarm(1.0);
+    SectorGraph sec = SectorGraph::create_standard_planetary_graph();
+    LogisticsSystem log;
+
+    PlanetaryProjection proj = ProjectionEngine::run_monte_carlo(def, att, sec, log, 15);
+    OMNIS_ASSERT(proj.iterations_run == 15);
+    double total_prob = proj.win_percentage + proj.stalemate_percentage + proj.defeat_percentage;
+    OMNIS_ASSERT(std::abs(total_prob - 100.0) < 1e-2);
+    OMNIS_ASSERT(proj.expected_days_survived >= 0.0);
+    OMNIS_ASSERT(!proj.strategic_assessment.empty());
+
+    std::cout << "       PASS: Win (" << proj.win_percentage << "%), Stalemate (" 
+              << proj.stalemate_percentage << "%), Defeat (" << proj.defeat_percentage 
+              << "%) computed across 15 iterations.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -197,9 +216,10 @@ int main() {
     test_synapse_disruption();
     test_sector_graph_and_fallbacks();
     test_logistics_depletion();
+    test_monte_carlo_projections();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 6 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 7 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
