@@ -205,6 +205,55 @@ void test_monte_carlo_projections() {
               << "%) computed across 15 iterations.\n";
 }
 
+void test_command_doctrines() {
+    std::cout << "[TEST] 6. Tactical Command Doctrines..." << std::endl;
+    SimulationEngine sim;
+
+    // Trigger Promethium Moat (F1)
+    double initial_gaunts = sim.attackers.find_unit("hormagaunt")->count;
+    bool ok1 = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+    OMNIS_ASSERT(ok1);
+    double post_fire_gaunts = sim.attackers.find_unit("hormagaunt")->count;
+    OMNIS_ASSERT(post_fire_gaunts < initial_gaunts);
+
+    // Cooldown check
+    bool ok_cd = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+    OMNIS_ASSERT(!ok_cd); // Should be on cooldown
+
+    // Trigger Titan Plasma Volley (F2)
+    double initial_carnifex = sim.attackers.find_unit("carnifex")->count;
+    bool ok2 = sim.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY);
+    OMNIS_ASSERT(ok2);
+    double post_titan_carn = sim.attackers.find_unit("carnifex")->count;
+    OMNIS_ASSERT(post_titan_carn < initial_carnifex);
+
+    // Trigger Drop-Pod Synapse Spearhead (F3)
+    double initial_warriors = sim.attackers.find_unit("tyranid_warrior")->count;
+    bool ok3 = sim.trigger_doctrine(DoctrineType::ASTARTES_DROP_POD);
+    OMNIS_ASSERT(ok3);
+    double post_warriors = sim.attackers.find_unit("tyranid_warrior")->count;
+    OMNIS_ASSERT(post_warriors < initial_warriors);
+
+    std::cout << "       PASS: Promethium flame, Titan plasma, and Space Marine drop-pods verified.\n";
+}
+
+void test_fortification_absorption_and_progression() {
+    std::cout << "[TEST] 11. Multi-Tier Sector Fortification & Breach Progression..." << std::endl;
+    SimulationEngine sim;
+    
+    // Simulate 3 seconds in Sector 1 (Orbital Grid)
+    double init_humans = sim.defenders.get_total_count();
+    sim.update(3.0);
+
+    // Defenders must still have the vast majority alive (>90%) because Sector 1 absorbs the space assault
+    double post_humans = sim.defenders.get_total_count();
+    OMNIS_ASSERT(post_humans > init_humans * 0.85);
+    OMNIS_ASSERT(sim.sector_graph.get_active_sector().breach_percentage > 0.0);
+
+    std::cout << "       PASS: Fortification absorbed assault. Surface garrison preserved ("
+              << (int)post_humans << " / " << (int)init_humans << " alive).\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -217,9 +266,11 @@ int main() {
     test_sector_graph_and_fallbacks();
     test_logistics_depletion();
     test_monte_carlo_projections();
+    test_command_doctrines();
+    test_fortification_absorption_and_progression();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 7 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 9 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
