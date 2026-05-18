@@ -64,7 +64,6 @@ int PixelFramebuffer::get_screen_scale(int client_width, int client_height) cons
     int scale_x = client_width / width;
     int scale_y = client_height / height;
     int scale = std::min(scale_x, scale_y);
-    // Preliminary integer scaler implementation
     return std::max(1, scale);
 }
 
