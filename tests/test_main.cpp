@@ -254,6 +254,59 @@ void test_fortification_absorption_and_progression() {
               << (int)post_humans << " / " << (int)init_humans << " alive).\n";
 }
 
+void test_environmental_hazards_and_breaches() {
+    std::cout << "[TEST] 13. Environmental Hazards & Subterranean Breaches..." << std::endl;
+    EnvironmentalHazards hazards;
+    hazards.add_spore_toxicity(45.0);
+    OMNIS_ASSERT(hazards.spore_toxicity == 45.0);
+
+    ArmyRoster def = ArmyRoster::create_imperial_defense();
+    ArmyRoster att = ArmyRoster::create_tyranid_swarm();
+    Sector sec(3, "Trench", "SEC-03", "Trenches", 50000.0, 0.0, 1e8);
+
+    double init_inf = def.find_unit("cadian_infantry")->count;
+    hazards.update(2.0, def, att, sec);
+    double post_inf = def.find_unit("cadian_infantry")->count;
+
+    // Unsealed Cadians suffer casualties from toxic spores
+    OMNIS_ASSERT(post_inf < init_inf);
+
+    // Sealed Space Marines take 0 casualties from spores
+    UnitClass* marine = def.find_unit("astartes_spearhead");
+    OMNIS_ASSERT(marine != nullptr);
+    OMNIS_ASSERT(marine->count == marine->initial_count);
+
+    // Trigger Mawloc subterranean breach
+    hazards.trigger_subterranean_breach(10.0);
+    OMNIS_ASSERT(hazards.subterranean_breach_active);
+
+    double init_arty = def.find_unit("basilisk_artillery")->count;
+    hazards.update(1.0, def, att, sec);
+    double post_arty = def.find_unit("basilisk_artillery")->count;
+    OMNIS_ASSERT(post_arty < init_arty); // Backline attacked directly
+
+    std::cout << "       PASS: Spore toxicity filtered by sealed armor; subterranean Mawlocs struck backline.\n";
+}
+
+void test_commissar_execution_mechanic() {
+    std::cout << "[TEST] 14. Commissar Summary Execution & Orbital Lasers..." << std::endl;
+    EnvironmentalHazards hazards;
+    ArmyRoster def = ArmyRoster::create_imperial_defense();
+    ArmyRoster att = ArmyRoster::create_tyranid_swarm();
+
+    bool executed = hazards.trigger_commissar_execution(def);
+    OMNIS_ASSERT(executed);
+    OMNIS_ASSERT(hazards.commissar_executions_count == 1.0);
+
+    // Orbital defense laser strike
+    double kills = hazards.trigger_orbital_defense_laser(att);
+    OMNIS_ASSERT(kills > 1000000.0); // Millions of vanguard organisms vaporized
+    OMNIS_ASSERT(hazards.orbital_laser_cooldown > 0.0);
+
+    std::cout << "       PASS: Commissar execution restored resolve; Orbital Lasers vaporized " 
+              << (int)kills << " organisms.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -268,9 +321,11 @@ int main() {
     test_monte_carlo_projections();
     test_command_doctrines();
     test_fortification_absorption_and_progression();
+    test_environmental_hazards_and_breaches();
+    test_commissar_execution_mechanic();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 9 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 11 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
