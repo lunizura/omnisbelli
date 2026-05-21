@@ -7,6 +7,8 @@ bool InputHandler::handle_key_down(
     SimulationEngine& sim,
     UIManager& ui
 ) {
+    // Sound feedback cue on keyboard events
+    AudioSFX::play_relay_click();
     switch (wParam) {
     case VK_SPACE:
         sim.toggle_pause();
