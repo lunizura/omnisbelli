@@ -307,6 +307,22 @@ void test_commissar_execution_mechanic() {
               << (int)kills << " organisms.\n";
 }
 
+void test_telemetry_export() {
+    std::cout << "[TEST] 15. Battle Telemetry JSON & Forensic Log Export..." << std::endl;
+    ArmyRoster def = ArmyRoster::create_imperial_defense();
+    ArmyRoster att = ArmyRoster::create_tyranid_swarm();
+    Sector sec(1, "Orbital", "SEC-01", "Orbital Grid", 100000.0, 0.0, 1e8);
+    LogisticsSystem log;
+
+    bool json_ok = TelemetryExport::export_battle_json("bin/test_report.json", def, att, sec, log, 3600.0, "TEST VICTORY");
+    bool log_ok = TelemetryExport::export_forensic_log("bin/test_forensic.log", def, att, sec, log, 3600.0, "TEST VICTORY");
+
+    OMNIS_ASSERT(json_ok);
+    OMNIS_ASSERT(log_ok);
+
+    std::cout << "       PASS: Telemetry JSON and forensic logs successfully exported and verified.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -323,9 +339,10 @@ int main() {
     test_fortification_absorption_and_progression();
     test_environmental_hazards_and_breaches();
     test_commissar_execution_mechanic();
+    test_telemetry_export();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 11 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 12 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
