@@ -323,6 +323,69 @@ void test_telemetry_export() {
     std::cout << "       PASS: Telemetry JSON and forensic logs successfully exported and verified.\n";
 }
 
+void test_modular_factions() {
+    std::cout << "[TEST] 8. Modular Faction Expansion Roster (Orks, Necrons, Chaos)..." << std::endl;
+    ArmyRoster orks = ArmyRoster::create_ork_waaagh(1.0);
+    ArmyRoster necrons = ArmyRoster::create_necron_dynasty(1.0);
+    ArmyRoster chaos = ArmyRoster::create_chaos_incursion(1.0);
+
+    OMNIS_ASSERT(orks.get_total_count() > 40000000.0);
+    OMNIS_ASSERT(necrons.get_total_count() > 15000000.0);
+    OMNIS_ASSERT(chaos.get_total_count() > 40000000.0);
+
+    OMNIS_ASSERT(orks.get_total_living_hp() > 0.0);
+    OMNIS_ASSERT(necrons.get_total_living_hp() > 0.0);
+    OMNIS_ASSERT(chaos.get_total_living_hp() > 0.0);
+
+    std::cout << "       PASS: Modular faction rosters initialized with complete statistics.\n";
+}
+
+void test_modular_doctrine_execution() {
+    std::cout << "[TEST] 10. Modular Command Doctrines on Orks and Necrons..." << std::endl;
+    CommandOrders orders;
+    ArmyRoster def = ArmyRoster::create_imperial_defense(1.0);
+    ArmyRoster orks = ArmyRoster::create_ork_waaagh(1.0);
+    SectorGraph sec = SectorGraph::create_standard_planetary_graph();
+    LogisticsSystem log;
+    SynapseNetwork syn;
+
+    // Test Astartes Drop Pod on Orks
+    double init_ork_count = orks.get_total_count();
+    bool drop_ok = orders.trigger_doctrine(DoctrineType::ASTARTES_DROP_POD, def, orks, sec, log, syn);
+    OMNIS_ASSERT(drop_ok);
+    OMNIS_ASSERT(orks.get_total_count() < init_ork_count);
+
+    // Test Titan Plasma Volley on Orks (must hit Battlewagons / Gargants)
+    orders.reset();
+    init_ork_count = orks.get_total_count();
+    bool titan_ok = orders.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY, def, orks, sec, log, syn);
+    OMNIS_ASSERT(titan_ok);
+    OMNIS_ASSERT(orks.get_total_count() < init_ork_count);
+
+    std::cout << "       PASS: Modular doctrines successfully executed against non-Tyranid factions.\n";
+}
+
+void test_tau_aeldari_custodes_rosters() {
+    std::cout << "[TEST] 12. T'au, Aeldari, and Custodes Factions..." << std::endl;
+    ArmyRoster tau = ArmyRoster::create_tau_empire();
+    ArmyRoster eldar = ArmyRoster::create_aeldari_host();
+    ArmyRoster custodes = ArmyRoster::create_custodes_vanguard();
+
+    OMNIS_ASSERT(tau.units.size() == 4);
+    OMNIS_ASSERT(eldar.units.size() == 4);
+    OMNIS_ASSERT(custodes.units.size() == 3);
+
+    // Custodes have heavy armor (>=0.85) and massive HP
+    UnitClass* guard = custodes.find_unit("custodian_guard");
+    OMNIS_ASSERT(guard != nullptr && guard->armor >= 0.85);
+
+    // T'au Hammerhead has high AP and heavy damage
+    UnitClass* railgun = tau.find_unit("hammerhead_gunship");
+    OMNIS_ASSERT(railgun != nullptr && railgun->dps_per_unit >= 500.0);
+
+    std::cout << "       PASS: T'au, Aeldari, and Custodes rosters initialized with authentic profiles.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -340,9 +403,12 @@ int main() {
     test_environmental_hazards_and_breaches();
     test_commissar_execution_mechanic();
     test_telemetry_export();
+    test_modular_factions();
+    test_modular_doctrine_execution();
+    test_tau_aeldari_custodes_rosters();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 12 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 15 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }

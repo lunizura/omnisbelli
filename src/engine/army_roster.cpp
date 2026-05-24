@@ -245,5 +245,286 @@ ArmyRoster ArmyRoster::create_tyranid_swarm(double scale) {
     return roster;
 }
 
+ArmyRoster ArmyRoster::create_ork_waaagh(double scale) {
+    ArmyRoster roster("orks", "WAAAGH! Ghazghkull Planetary Invasion");
+
+    roster.add_unit(UnitClass(
+        "ork_boyz", "Ork Boyz Mob", "orks",
+        UnitCategory::INFANTRY,
+        45000000.0 * scale, 12.0, 0.10, 2.0, 1.0, 0.8, 0.0,
+        TargetPriority::PRIORITY_BALANCED,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "ork_nobz", "Ork Nobz Brawlers", "orks",
+        UnitCategory::HEAVY_INFANTRY,
+        1200000.0 * scale, 90.0, 0.40, 18.0, 1.5, 1.8, 0.1,
+        TargetPriority::PRIORITY_BALANCED,
+        true, 50.0 // WAAAGH! focal leader
+    ));
+
+    roster.add_unit(UnitClass(
+        "battlewagon", "Kustom Battlewagons", "orks",
+        UnitCategory::ARMOR_VEHICLE,
+        80000.0 * scale, 3000.0, 0.60, 240.0, 5.0, 7.0, 0.2,
+        TargetPriority::PRIORITY_HEAVY,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "gargant", "Great Gargant God-Machines", "orks",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        500.0 * scale, 110000.0, 0.82, 9500.0, 20.0, 45.0, 0.4,
+        TargetPriority::PRIORITY_HEAVY,
+        true, 100000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_necron_dynasty(double scale) {
+    ArmyRoster roster("necrons", "Sautekh Necron Dynasty Legion");
+
+    roster.add_unit(UnitClass(
+        "necron_warrior", "Necron Gauss Warriors", "necrons",
+        UnitCategory::INFANTRY,
+        15000000.0 * scale, 24.0, 0.30, 4.5, 1.0, 1.0, 0.0,
+        TargetPriority::PRIORITY_BALANCED,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "immortals", "Tesla Immortals", "necrons",
+        UnitCategory::HEAVY_INFANTRY,
+        2500000.0 * scale, 65.0, 0.50, 14.0, 2.0, 1.4, 0.1,
+        TargetPriority::PRIORITY_BALANCED,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "monolith", "Necron Monolith Siege Engines", "necrons",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        15000.0 * scale, 45000.0, 0.85, 4200.0, 12.0, 20.0, 0.3,
+        TargetPriority::PRIORITY_HEAVY,
+        true, 50000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_chaos_incursion(double scale) {
+    ArmyRoster roster("chaos", "Black Legion Warp Incursion");
+
+    roster.add_unit(UnitClass(
+        "cultists", "Lost and the Damned Cultists", "chaos",
+        UnitCategory::INFANTRY,
+        40000000.0 * scale, 9.0, 0.05, 1.5, 1.0, 0.7, 0.0,
+        TargetPriority::PRIORITY_SWARM,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "chaos_space_marines", "Heretic Legionnaires", "chaos",
+        UnitCategory::HEAVY_INFANTRY,
+        2000000.0 * scale, 160.0, 0.68, 75.0, 1.5, 1.5, 0.1,
+        TargetPriority::PRIORITY_BALANCED,
+        true, 100.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "helbrute", "Helbrute Daemon Engines", "chaos",
+        UnitCategory::ARMOR_VEHICLE,
+        150000.0 * scale, 3800.0, 0.65, 310.0, 5.0, 6.0, 0.2,
+        TargetPriority::PRIORITY_HEAVY,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "greater_daemon", "Greater Daemons of the Warp", "chaos",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        3000.0 * scale, 85000.0, 0.82, 7800.0, 16.0, 25.0, 0.4,
+        TargetPriority::PRIORITY_HEAVY,
+        true, 50000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_tau_empire(double scale) {
+    ArmyRoster roster("tau", "T'au Empire Hunter Cadre");
+
+    roster.add_unit(UnitClass(
+        "fire_warriors", "Strike Team Fire Warriors", "tau",
+        UnitCategory::INFANTRY,
+        1500000.0 * scale, 12.0, 0.35, 8.5, 1.2, 0.9, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "crisis_battlesuits", "XV8 Crisis Battlesuits", "tau",
+        UnitCategory::HEAVY_INFANTRY,
+        120000.0 * scale, 140.0, 0.60, 95.0, 3.5, 2.5, 0.15,
+        TargetPriority::PRIORITY_BALANCED, true, 50.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "hammerhead_gunship", "Hammerhead Railgun Tanks", "tau",
+        UnitCategory::ARMOR_VEHICLE,
+        18000.0 * scale, 4200.0, 0.70, 850.0, 8.0, 8.0, 0.25,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "riptide_battlesuit", "XV104 Riptide Battlesuits", "tau",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        2500.0 * scale, 38000.0, 0.80, 3400.0, 10.0, 15.0, 0.35,
+        TargetPriority::PRIORITY_HEAVY, true, 25000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_aeldari_host(double scale) {
+    ArmyRoster roster("aeldari", "Asuryani Craftworld Host");
+
+    roster.add_unit(UnitClass(
+        "guardians", "Guardian Defenders", "aeldari",
+        UnitCategory::INFANTRY,
+        1000000.0 * scale, 11.0, 0.28, 9.0, 1.5, 0.8, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "dire_avengers", "Dire Avenger Aspect Warriors", "aeldari",
+        UnitCategory::HEAVY_INFANTRY,
+        250000.0 * scale, 24.0, 0.45, 22.0, 2.0, 1.0, 0.05,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "wraithguard", "Wraithguard Construct Host", "aeldari",
+        UnitCategory::ARMOR_VEHICLE,
+        45000.0 * scale, 520.0, 0.75, 280.0, 6.0, 2.0, 0.15,
+        TargetPriority::PRIORITY_HEAVY, true, 100.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "avatar_khaine", "Avatar of the Bloody-Handed God", "aeldari",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        10.0 * scale, 65000.0, 0.88, 9200.0, 18.0, 8.0, 0.5,
+        TargetPriority::PRIORITY_HEAVY, true, 100000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_custodes_vanguard(double scale) {
+    ArmyRoster roster("custodes", "Adeptus Custodes Shield Host");
+
+    roster.add_unit(UnitClass(
+        "custodian_guard", "Custodian Guard Shield Companions", "custodes",
+        UnitCategory::HEAVY_INFANTRY,
+        10000.0 * scale, 450.0, 0.85, 320.0, 4.0, 1.5, 0.25,
+        TargetPriority::PRIORITY_BALANCED, true, 500.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "allarus_terminator", "Allarus Custodians", "custodes",
+        UnitCategory::HEAVY_INFANTRY,
+        3500.0 * scale, 750.0, 0.88, 480.0, 5.0, 2.0, 0.30,
+        TargetPriority::PRIORITY_SYNAPSE, true, 1000.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "telemon_dreadnought", "Telemon Heavy Dreadnoughts", "custodes",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        300.0 * scale, 48000.0, 0.90, 4500.0, 12.0, 12.0, 0.40,
+        TargetPriority::PRIORITY_HEAVY, true, 20000.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_genestealer_cult(double scale) {
+    ArmyRoster roster("gsc", "Four-Armed Emperor Insurrection");
+
+    roster.add_unit(UnitClass(
+        "neophytes", "Neophyte Hybrid Insurgents", "gsc",
+        UnitCategory::INFANTRY,
+        15000000.0 * scale, 8.0, 0.10, 1.8, 1.0, 0.7, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "aberrants", "Aberrant Shock Mutants", "gsc",
+        UnitCategory::HEAVY_INFANTRY,
+        800000.0 * scale, 85.0, 0.40, 45.0, 2.0, 1.6, 0.05,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "rockgrinder", "Goliath Rockgrinder Drills", "gsc",
+        UnitCategory::ARMOR_VEHICLE,
+        45000.0 * scale, 2800.0, 0.55, 240.0, 4.0, 6.0, 0.2,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_krieg_siege_army(double scale) {
+    ArmyRoster roster("krieg", "Death Korps of Krieg 88th Siege Army");
+
+    roster.add_unit(UnitClass(
+        "krieg_infantry", "Krieg Trench Guardsmen (Lucius No. 98)", "krieg",
+        UnitCategory::INFANTRY,
+        3500000.0 * scale, 12.0, 0.25, 2.8, 1.0, 0.8, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "death_riders", "Death Rider Cavalry", "krieg",
+        UnitCategory::HEAVY_INFANTRY,
+        120000.0 * scale, 45.0, 0.45, 38.0, 2.5, 1.8, 0.1,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "krieg_earthshaker", "Earthshaker Carriage Batteries", "krieg",
+        UnitCategory::ARTILLERY_ORBITAL,
+        12000.0 * scale, 1800.0, 0.40, 850.0, 8.0, 8.0, 0.3,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    return roster;
+}
+
+ArmyRoster ArmyRoster::create_iron_warriors(double scale) {
+    ArmyRoster roster("iron_warriors", "Iron Warriors IV Legion Grand Battalion");
+
+    roster.add_unit(UnitClass(
+        "iron_legionnaires", "Iron Warriors Legion Breachers", "iron_warriors",
+        UnitCategory::HEAVY_INFANTRY,
+        450000.0 * scale, 180.0, 0.72, 85.0, 2.0, 1.5, 0.1,
+        TargetPriority::PRIORITY_BALANCED, true, 200.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "havoc_squads", "Havoc Heavy Support Batteries", "iron_warriors",
+        UnitCategory::HEAVY_INFANTRY,
+        80000.0 * scale, 160.0, 0.68, 190.0, 6.0, 2.0, 0.2,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "defiler_engine", "Defiler Siege Daemon Engines", "iron_warriors",
+        UnitCategory::ARMOR_VEHICLE,
+        25000.0 * scale, 6500.0, 0.70, 720.0, 7.0, 8.0, 0.3,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    return roster;
+}
 
 } // namespace omnisbelli
