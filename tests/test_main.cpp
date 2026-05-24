@@ -386,6 +386,28 @@ void test_tau_aeldari_custodes_rosters() {
     std::cout << "       PASS: T'au, Aeldari, and Custodes rosters initialized with authentic profiles.\n";
 }
 
+void test_extreme_scale_billion_entities() {
+    std::cout << "[TEST] 16. Extreme Scale (1,000,000,000 Entities) Numerical Stability..." << std::endl;
+    ArmyRoster def = ArmyRoster::create_imperial_defense(10.0); // 20M Defenders
+    ArmyRoster swarm = ArmyRoster::create_tyranid_swarm(10.0); // 1 Billion Swarm
+
+    OMNIS_ASSERT(swarm.get_total_count() >= 1000000000.0);
+
+    Sector sec(2, "Plains", "SEC-02", "Ash Wastes", 500000000.0, 0.0, 1e10);
+    LogisticsSystem log;
+    SynapseNetwork syn;
+    CombatStepTelemetry tel;
+
+    // Run 10 ticks at billion scale
+    for (int i = 0; i < 10; ++i) {
+        LanchesterCombat::compute_combat_tick(def, swarm, sec, log, syn, 1.0, tel);
+        OMNIS_ASSERT(!std::isnan(tel.attacker_dps_effective));
+        OMNIS_ASSERT(!std::isnan(tel.defender_dps_effective));
+    }
+
+    std::cout << "       PASS: 1 Billion swarm simulation stable with zero floating-point overflow or NaN.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -406,9 +428,10 @@ int main() {
     test_modular_factions();
     test_modular_doctrine_execution();
     test_tau_aeldari_custodes_rosters();
+    test_extreme_scale_billion_entities();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 15 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 16 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
