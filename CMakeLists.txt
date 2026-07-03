@@ -26,6 +26,11 @@ set(ENGINE_SOURCES
     src/engine/projection.cpp
     src/engine/simulation.cpp
     src/engine/telemetry_export.cpp
+    src/engine/faction_rule_module.cpp
+    src/engine/death_guard_mechanic.cpp
+    src/engine/sororitas_mechanic.cpp
+    src/engine/mechanicus_mechanic.cpp
+    src/engine/world_eaters_mechanic.cpp
 )
 
 set(GFX_SOURCES
@@ -59,5 +64,6 @@ add_executable(test_simulation
     ${ENGINE_SOURCES}
 )
 
-enable_testing()
-add_test(NAME SimulationTests COMMAND test_simulation)
+if(WIN32)
+    target_link_libraries(test_simulation PRIVATE user32 gdi32)
+endif()

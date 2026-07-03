@@ -29,6 +29,11 @@ cl %CXX_FLAGS% /Fobin\ /Febin\test_simulation.exe ^
     src\engine\projection.cpp ^
     src\engine\simulation.cpp ^
     src\engine\telemetry_export.cpp ^
+    src\engine\faction_rule_module.cpp ^
+    src\engine\death_guard_mechanic.cpp ^
+    src\engine\sororitas_mechanic.cpp ^
+    src\engine\mechanicus_mechanic.cpp ^
+    src\engine\world_eaters_mechanic.cpp ^
     /link %LIBS%
 
 if %errorlevel% neq 0 (
@@ -49,12 +54,17 @@ cl %CXX_FLAGS% /Fobin\ /Febin\omnisbelli.exe ^
     src\engine\command_orders.cpp ^
     src\engine\projection.cpp ^
     src\engine\simulation.cpp ^
+    src\engine\telemetry_export.cpp ^
+    src\engine\faction_rule_module.cpp ^
+    src\engine\death_guard_mechanic.cpp ^
+    src\engine\sororitas_mechanic.cpp ^
+    src\engine\mechanicus_mechanic.cpp ^
+    src\engine\world_eaters_mechanic.cpp ^
     src\gfx\framebuffer.cpp ^
     src\gfx\bitmap_font.cpp ^
     src\gfx\rasterizer.cpp ^
     src\gfx\crt_effects.cpp ^
     src\gfx\audio_sfx.cpp ^
-    src\engine\telemetry_export.cpp ^
     src\ui\ui_manager.cpp ^
     src\ui\input_handler.cpp ^
     /link /SUBSYSTEM:WINDOWS %LIBS%
