@@ -10,6 +10,8 @@ class ArmyRoster {
 public:
     std::string army_id;
     std::string display_name;
+    std::string faction_id;
+    std::string name;
     std::vector<UnitClass> units;
 
     ArmyRoster();
@@ -46,6 +48,7 @@ public:
     static ArmyRoster create_genestealer_cult(double scale = 1.0);
     static ArmyRoster create_krieg_siege_army(double scale = 1.0);
     static ArmyRoster create_iron_warriors(double scale = 1.0);
-};
+
+    };
 
 } // namespace omnisbelli

@@ -5,10 +5,12 @@
 namespace omnisbelli {
 
 ArmyRoster::ArmyRoster()
-    : army_id("unassigned"), display_name("Unassigned Force") {}
+    : army_id("unassigned"), display_name("Unassigned Force"),
+      faction_id("unassigned"), name("Unassigned Force") {}
 
 ArmyRoster::ArmyRoster(const std::string& army_id, const std::string& display_name)
-    : army_id(army_id), display_name(display_name) {}
+    : army_id(army_id), display_name(display_name),
+      faction_id(army_id), name(display_name) {}
 
 void ArmyRoster::add_unit(const UnitClass& unit) {
     units.push_back(unit);
@@ -526,5 +528,6 @@ ArmyRoster ArmyRoster::create_iron_warriors(double scale) {
 
     return roster;
 }
+
 
 } // namespace omnisbelli
