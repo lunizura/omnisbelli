@@ -33,7 +33,6 @@ void DeathGuardMechanic::pre_combat_tick(
     Sector& active_sector,
     double dt
 ) {
-    (void)enemy;
     if (dt <= 0.0 || friendly.is_defeated()) return;
 
     contested_seconds_in_sector += dt;
@@ -54,6 +53,20 @@ void DeathGuardMechanic::pre_combat_tick(
         active_sector.fortification_cover = std::max(0.10, active_sector.fortification_cover - corrosion);
         sector_rot_corrosion_pct += corrosion * 100.0;
     }
+
+    // Passive environmental rot attrition on unsealed enemy infantry
+    if (contagion_intensity >= 0.20) {
+        double rot_rate = 0.0006 * contagion_intensity * dt;
+        for (auto& u : enemy.units) {
+            // Unsealed infantry units suffer continuous respiratory necrosis
+            if (u.category == UnitCategory::INFANTRY &&
+                u.id.find("marine") == std::string::npos &&
+                u.id.find("custodes") == std::string::npos &&
+                u.id.find("necron") == std::string::npos) {
+                u.apply_direct_casualties(u.count * rot_rate);
+            }
+        }
+    }
 }
 
 void DeathGuardMechanic::modify_outgoing_damage(
@@ -63,6 +76,7 @@ void DeathGuardMechanic::modify_outgoing_damage(
 ) {
     (void)friendly;
     (void)dt;
+    // Contagion corrodes enemy armor, effectively granting additional armor penetration
     out_damage.armor_penetration = std::min(0.85, out_damage.armor_penetration + (0.25 * contagion_intensity));
 }
 
@@ -75,7 +89,8 @@ double DeathGuardMechanic::apply_incoming_mitigation(
     (void)dt;
     if (incoming_raw_damage <= 0.0) return 0.0;
 
-    const double fnp_factor = 0.50;
+    // Disgustingly Resilient (FNP): Negates 33.3% of lethal damage
+    const double fnp_factor = 0.50; // D_eff = D_raw / (1 + 0.5) = 0.667 * D_raw
     double mitigated_damage = incoming_raw_damage / (1.0 + fnp_factor);
     disgusting_resilience_damage_negated += (incoming_raw_damage - mitigated_damage);
     return mitigated_damage;
