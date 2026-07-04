@@ -101,9 +101,16 @@ void DeathGuardMechanic::on_casualty_event(
     ArmyRoster& enemy,
     const CasualtyEvent& event
 ) {
-    (void)friendly;
     (void)enemy;
-    (void)event;
+    // Poxwalker Corpse Recursion: Slain enemy organic infantry rise as Poxwalkers
+    if (!event.is_friendly && event.units_killed > 0.0) {
+        UnitClass* pox = friendly.find_unit("poxwalkers");
+        if (pox && pox->is_alive()) {
+            double raised = event.units_killed * 0.12 * contagion_intensity;
+            pox->count += raised;
+            poxwalkers_spawned += raised;
+        }
+    }
 }
 
 void DeathGuardMechanic::reset() {
