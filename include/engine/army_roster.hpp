@@ -49,6 +49,8 @@ public:
     static ArmyRoster create_krieg_siege_army(double scale = 1.0);
     static ArmyRoster create_iron_warriors(double scale = 1.0);
 
+    // Expansion Faction Rosters
+    static ArmyRoster create_death_guard(double scale = 1.0);
     };
 
 } // namespace omnisbelli
