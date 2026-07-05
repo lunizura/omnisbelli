@@ -530,4 +530,31 @@ ArmyRoster ArmyRoster::create_iron_warriors(double scale) {
 }
 
 
+ArmyRoster ArmyRoster::create_death_guard(double scale) {
+    ArmyRoster roster("death_guard", "Death Guard XIV Legion Plague Vectorium");
+
+    roster.add_unit(UnitClass(
+        "poxwalkers", "Poxwalker Plague Thralls", "death_guard",
+        UnitCategory::INFANTRY,
+        12000000.0 * scale, 14.0, 0.05, 1.4, 1.0, 0.6, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "plague_marines", "Death Guard Plague Marine Vectors", "death_guard",
+        UnitCategory::HEAVY_INFANTRY,
+        1500000.0 * scale, 220.0, 0.72, 82.0, 2.0, 1.6, 0.1,
+        TargetPriority::PRIORITY_BALANCED, true, 300.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "deathshroud", "Deathshroud Terminator Bodyguard", "death_guard",
+        UnitCategory::HEAVY_INFANTRY,
+        60000.0 * scale, 580.0, 0.85, 310.0, 3.5, 2.2, 0.05,
+        TargetPriority::PRIORITY_SYNAPSE, true, 2000.0
+    ));
+
+        return roster;
+}
+
 } // namespace omnisbelli
