@@ -554,7 +554,28 @@ ArmyRoster ArmyRoster::create_death_guard(double scale) {
         TargetPriority::PRIORITY_SYNAPSE, true, 2000.0
     ));
 
-        return roster;
+    roster.add_unit(UnitClass(
+        "myphitic_blight_hauler", "Myphitic Blight-Hauler Tri-Squads", "death_guard",
+        UnitCategory::ARMOR_VEHICLE,
+        80000.0 * scale, 4200.0, 0.75, 340.0, 4.0, 5.5, 0.2,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "plagueburst_crawler", "Plagueburst Crawler Heavy Siege Mortars", "death_guard",
+        UnitCategory::ARTILLERY_ORBITAL,
+        30000.0 * scale, 5500.0, 0.82, 680.0, 12.0, 8.0, 0.7,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "mortarion_scion", "Scion of Mortarion Daemon Engines", "death_guard",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        10.0 * scale, 140000.0, 0.90, 14500.0, 20.0, 25.0, 0.3,
+        TargetPriority::PRIORITY_HEAVY, true, 50000.0
+    ));
+
+    return roster;
 }
 
 } // namespace omnisbelli
