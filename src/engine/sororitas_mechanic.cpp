@@ -33,9 +33,39 @@ double SororitasMechanic::get_telemetry_ratio() const {
     return std::clamp(miracle_points / 100.0, 0.0, 1.0);
 }
 
-void SororitasMechanic::pre_combat_tick(ArmyRoster& friendly, ArmyRoster& enemy, Sector& active_sector, double dt) {
-    (void)friendly; (void)enemy; (void)active_sector; (void)dt;
+void SororitasMechanic::pre_combat_tick(
+    ArmyRoster& friendly,
+    ArmyRoster& enemy,
+    Sector& active_sector,
+    double dt
+) {
+    (void)enemy;
+    if (dt <= 0.0 || friendly.is_defeated()) return;
+
+    // Timer for active divine shield
+    if (divine_shield_active) {
+        divine_shield_timer -= dt;
+        if (divine_shield_timer <= 0.0) {
+            divine_shield_active = false;
+        }
+    }
+
+    // Passive faith accumulation when defending a contested or critical sector
+    if (active_sector.status == SectorStatus::CRITICAL || active_sector.breach_percentage >= 50.0) {
+        miracle_points = std::min(100.0, miracle_points + 0.40 * dt);
+    }
+
+    // Saint Celestine miraculous resurrection check
+    if (!saint_resurrected && miracle_points >= 40.0) {
+        UnitClass* saint = friendly.find_unit("saint_celestine");
+        if (saint && !saint->is_alive()) {
+            saint->count = saint->initial_count;
+            miracle_points -= 40.0;
+            saint_resurrected = true;
+        }
+    }
 }
+
 void SororitasMechanic::modify_outgoing_damage(
     const ArmyRoster& friendly,
     DamagePacket& out_damage,
