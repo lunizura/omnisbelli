@@ -578,4 +578,52 @@ ArmyRoster ArmyRoster::create_death_guard(double scale) {
     return roster;
 }
 
+ArmyRoster ArmyRoster::create_adepta_sororitas(double scale) {
+    ArmyRoster roster("sororitas", "Adepta Sororitas Order of Our Martyred Lady Crusade");
+
+    roster.add_unit(UnitClass(
+        "battle_sisters", "Battle Sister Line Squads", "sororitas",
+        UnitCategory::INFANTRY,
+        2000000.0 * scale, 25.0, 0.55, 8.2, 1.0, 1.0, 0.05,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "sisters_repentia", "Sisters Repentia Flagellant Zealots", "sororitas",
+        UnitCategory::INFANTRY,
+        350000.0 * scale, 16.0, 0.10, 38.0, 1.5, 0.8, 0.0,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "retributors", "Retributor Heavy Multi-Melta Cadres", "sororitas",
+        UnitCategory::HEAVY_INFANTRY,
+        90000.0 * scale, 35.0, 0.58, 115.0, 3.0, 1.2, 0.3,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "paragon_warsuits", "Paragon Warsuit Holy Vanguard", "sororitas",
+        UnitCategory::ARMOR_VEHICLE,
+        22000.0 * scale, 2200.0, 0.78, 420.0, 4.5, 3.5, 0.1,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "exorcist_missile_tank", "Exorcist Sanctorum Missile Artillery", "sororitas",
+        UnitCategory::ARTILLERY_ORBITAL,
+        5000.0 * scale, 3200.0, 0.65, 920.0, 9.0, 7.0, 0.8,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "saint_celestine", "Living Saint Avatars and Celestian Honor Guard", "sororitas",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        200.0 * scale, 22000.0, 0.88, 3800.0, 10.0, 4.0, 0.05,
+        TargetPriority::PRIORITY_SYNAPSE, true, 25000.0
+    ));
+
+    return roster;
+}
+
 } // namespace omnisbelli
