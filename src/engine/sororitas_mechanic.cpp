@@ -16,7 +16,13 @@ SororitasMechanic::SororitasMechanic()
       saint_resurrected(false) {}
 
 std::string SororitasMechanic::get_status_description() const {
-    return "ACTS OF FAITH // MIRACLE POOL: " + std::to_string(static_cast<int>(miracle_points)) + "/100";
+    std::string desc = "ACTS OF FAITH // MIRACLE POOL: " + std::to_string(static_cast<int>(miracle_points)) + "/100";
+    if (divine_shield_active) {
+        desc += " [SHIELD OF FAITH 4++ ENGAGED]";
+    } else if (miracle_points >= 50.0) {
+        desc += " [HOLY TRINITY PURITY +35% DPS]";
+    }
+    return desc;
 }
 
 std::string SororitasMechanic::get_telemetry_tag() const {
@@ -27,24 +33,82 @@ double SororitasMechanic::get_telemetry_ratio() const {
     return std::clamp(miracle_points / 100.0, 0.0, 1.0);
 }
 
-void SororitasMechanic::pre_combat_tick(ArmyRoster& friendly, ArmyRoster& enemy, Sector& active_sector, double dt) {
-    (void)friendly; (void)enemy; (void)active_sector; (void)dt;
+void SororitasMechanic::pre_combat_tick(
+    ArmyRoster& friendly,
+    ArmyRoster& enemy,
+    Sector& active_sector,
+    double dt
+) {
+    (void)enemy;
+    if (dt <= 0.0 || friendly.is_defeated()) return;
+
+    // Timer for active divine shield
+    if (divine_shield_active) {
+        divine_shield_timer -= dt;
+        if (divine_shield_timer <= 0.0) {
+            divine_shield_active = false;
+        }
+    }
+
+    // Passive faith accumulation when defending a contested or critical sector
+    if (active_sector.status == SectorStatus::CRITICAL || active_sector.breach_percentage >= 50.0) {
+        miracle_points = std::min(100.0, miracle_points + 0.40 * dt);
+    }
+
+    // Saint Celestine miraculous resurrection check
+    if (!saint_resurrected && miracle_points >= 40.0) {
+        UnitClass* saint = friendly.find_unit("saint_celestine");
+        if (saint && !saint->is_alive()) {
+            saint->count = saint->initial_count;
+            miracle_points -= 40.0;
+            saint_resurrected = true;
+        }
+    }
 }
 
 void SororitasMechanic::modify_outgoing_damage(const ArmyRoster& friendly, DamagePacket& out_damage, double dt) {
     (void)friendly; (void)out_damage; (void)dt;
 }
+double SororitasMechanic::apply_incoming_mitigation(
+    ArmyRoster& friendly,
+    double incoming_raw_damage,
+    double dt
+) {
+    (void)dt;
+    if (incoming_raw_damage <= 0.0) return 0.0;
 
-double SororitasMechanic::apply_incoming_mitigation(ArmyRoster& friendly, double incoming_raw_damage, double dt) {
-    (void)friendly; (void)dt;
+    // Active Shield of Faith 4++ invulnerability
+    if (divine_shield_active) {
+        double absorbed = incoming_raw_damage * 0.50; // Halves all incoming damage
+        damage_absorbed_by_faith += absorbed;
+        return incoming_raw_damage - absorbed;
+    }
+
+    // Auto-proc Divine Shield if sudden burst exceeds 40% of living HP and we have >= 15 faith
+    double living_hp = friendly.get_total_living_hp();
+    if (incoming_raw_damage > living_hp * 0.35 && miracle_points >= 15.0) {
+        miracle_points -= 15.0;
+        divine_shield_active = true;
+        divine_shield_timer = 6.0;
+        double absorbed = incoming_raw_damage * 0.50;
+        damage_absorbed_by_faith += absorbed;
+        return incoming_raw_damage - absorbed;
+    }
+
     return incoming_raw_damage;
 }
 
-void SororitasMechanic::on_casualty_event(ArmyRoster& friendly, ArmyRoster& enemy, const CasualtyEvent& event) {
-    (void)friendly; (void)enemy;
+void SororitasMechanic::on_casualty_event(
+    ArmyRoster& friendly,
+    ArmyRoster& enemy,
+    const CasualtyEvent& event
+) {
+    (void)friendly;
+    (void)enemy;
+    // Friendly casualties convert directly into Martyrdom Miracle Points
     if (event.is_friendly && event.units_killed > 0.0) {
         casualties_since_last_dice += event.units_killed;
-        const double casualty_threshold = 12000.0;
+        const double casualty_threshold = 12000.0; // 12,000 casualties per faith point
         if (casualties_since_last_dice >= casualty_threshold) {
             double gained = std::floor(casualties_since_last_dice / casualty_threshold);
             casualties_since_last_dice = std::fmod(casualties_since_last_dice, casualty_threshold);
@@ -54,7 +118,22 @@ void SororitasMechanic::on_casualty_event(ArmyRoster& friendly, ArmyRoster& enem
     }
 }
 
-bool SororitasMechanic::trigger_divine_intervention() { return false; }
-void SororitasMechanic::reset() {}
+bool SororitasMechanic::trigger_divine_intervention() {
+    if (miracle_points < 25.0) return false;
+    miracle_points -= 25.0;
+    divine_shield_active = true;
+    divine_shield_timer = 12.0;
+    return true;
+}
+
+void SororitasMechanic::reset() {
+    miracle_points = 15.0;
+    total_miracle_points_generated = 15.0;
+    casualties_since_last_dice = 0.0;
+    divine_shield_active = false;
+    divine_shield_timer = 0.0;
+    damage_absorbed_by_faith = 0.0;
+    saint_resurrected = false;
+}
 
 } // namespace omnisbelli
