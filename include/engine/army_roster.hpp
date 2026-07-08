@@ -52,6 +52,7 @@ public:
     // Expansion Faction Rosters
     static ArmyRoster create_death_guard(double scale = 1.0);
     static ArmyRoster create_adepta_sororitas(double scale = 1.0);
+    static ArmyRoster create_adeptus_mechanicus(double scale = 1.0);
     };
 
 } // namespace omnisbelli

@@ -626,4 +626,52 @@ ArmyRoster ArmyRoster::create_adepta_sororitas(double scale) {
     return roster;
 }
 
+ArmyRoster ArmyRoster::create_adeptus_mechanicus(double scale) {
+    ArmyRoster roster("mechanicus", "Adeptus Mechanicus Taghmata Omnissiah Exploration Fleet");
+
+    roster.add_unit(UnitClass(
+        "skitarii_vanguard_rad", "Skitarii Vanguard Rad-Carbine Phalanx", "mechanicus",
+        UnitCategory::INFANTRY,
+        3000000.0 * scale, 26.0, 0.38, 7.5, 1.2, 1.0, 0.05,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "skitarii_rangers", "Skitarii Ranger Galvanic Marksmen", "mechanicus",
+        UnitCategory::INFANTRY,
+        600000.0 * scale, 24.0, 0.35, 12.0, 1.0, 1.0, 0.4,
+        TargetPriority::PRIORITY_SYNAPSE, true, 500.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "kataphron_destroyers", "Kataphron Destroyer Heavy Servitor Cohorts", "mechanicus",
+        UnitCategory::HEAVY_INFANTRY,
+        160000.0 * scale, 320.0, 0.68, 145.0, 4.0, 3.0, 0.2,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "kastelan_robots", "Kastelan Robot Cybernetica Maniples", "mechanicus",
+        UnitCategory::ARMOR_VEHICLE,
+        45000.0 * scale, 3800.0, 0.82, 480.0, 5.0, 4.5, 0.1,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "onager_dunecrawler", "Onager Dunecrawler Eradication Walkers", "mechanicus",
+        UnitCategory::ARMOR_VEHICLE,
+        7000.0 * scale, 4100.0, 0.76, 620.0, 6.5, 6.5, 0.2,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "ordinatus_macro_engine", "Centurio Ordinatus Macro-Ulator Platforms", "mechanicus",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        50.0 * scale, 120000.0, 0.88, 16000.0, 30.0, 35.0, 0.6,
+        TargetPriority::PRIORITY_HEAVY, true, 60000.0
+    ));
+
+    return roster;
+}
+
 } // namespace omnisbelli
