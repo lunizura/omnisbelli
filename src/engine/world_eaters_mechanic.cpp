@@ -89,10 +89,17 @@ void WorldEatersMechanic::modify_outgoing_damage(
     }
 }
 
-double WorldEatersMechanic::apply_incoming_mitigation(ArmyRoster& friendly, double incoming_raw_damage, double dt) {
-    (void)friendly; (void)dt;
+double WorldEatersMechanic::apply_incoming_mitigation(
+    ArmyRoster& friendly,
+    double incoming_raw_damage,
+    double dt
+) {
+    (void)friendly;
+    (void)dt;
+    // Khorne cares not from whence the blood flows; no cowardly shielding, but rage ignores morale
     return incoming_raw_damage;
 }
+
 void WorldEatersMechanic::on_casualty_event(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
