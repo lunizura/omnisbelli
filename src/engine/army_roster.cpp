@@ -674,4 +674,45 @@ ArmyRoster ArmyRoster::create_adeptus_mechanicus(double scale) {
     return roster;
 }
 
+ArmyRoster ArmyRoster::create_world_eaters(double scale) {
+    ArmyRoster roster("world_eaters", "World Eaters XII Legion Blood Crusade");
+
+    roster.add_unit(UnitClass(
+        "jakhals", "Jakhals Blood-Stimmed Cultists", "world_eaters",
+        UnitCategory::INFANTRY,
+        12000000.0 * scale, 10.0, 0.08, 2.5, 1.0, 0.7, 0.0,
+        TargetPriority::PRIORITY_SWARM, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "khorne_berserkers", "Khorne Berzerker Assault Warbands", "world_eaters",
+        UnitCategory::HEAVY_INFANTRY,
+        3500000.0 * scale, 170.0, 0.65, 95.0, 2.0, 1.4, 0.0,
+        TargetPriority::PRIORITY_BALANCED, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "eightbound", "Eightbound Daemon-Possessed Shock Troops", "world_eaters",
+        UnitCategory::HEAVY_INFANTRY,
+        500000.0 * scale, 420.0, 0.75, 280.0, 4.0, 2.2, 0.0,
+        TargetPriority::PRIORITY_SYNAPSE, true, 8000.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "khorne_lord_of_skulls", "Khorne Lord of Skulls Daemon Engines", "world_eaters",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        10000.0 * scale, 42000.0, 0.84, 4900.0, 15.0, 16.0, 0.1,
+        TargetPriority::PRIORITY_HEAVY, false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
+        "bloodthirster_avatar", "Bloodthirster Greater Daemons of Khorne", "world_eaters",
+        UnitCategory::SUPER_HEAVY_TITAN,
+        100.0 * scale, 95000.0, 0.85, 11500.0, 25.0, 20.0, 0.05,
+        TargetPriority::PRIORITY_HEAVY, true, 100000.0
+    ));
+
+    return roster;
+}
+
 } // namespace omnisbelli
