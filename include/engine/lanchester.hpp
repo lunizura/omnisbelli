@@ -2,6 +2,7 @@
 #include "engine/army_roster.hpp"
 #include "engine/logistics.hpp"
 #include "engine/synapse_network.hpp"
+#include "engine/faction_rule_module.hpp"
 #include "engine/sector.hpp"
 
 namespace omnisbelli {
@@ -20,6 +21,17 @@ struct CombatStepTelemetry {
 
 class LanchesterCombat {
 public:
+    static void compute_combat_tick(
+        ArmyRoster& defenders,
+        ArmyRoster& attackers,
+        Sector& active_sector,
+        LogisticsSystem& logistics,
+        IFactionRuleModule& defender_rules,
+        IFactionRuleModule& attacker_rules,
+        double dt,
+        CombatStepTelemetry& telemetry
+    );
+
     static void compute_combat_tick(
         ArmyRoster& defenders,
         ArmyRoster& attackers,
