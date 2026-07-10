@@ -3,11 +3,13 @@
 #include "engine/sector.hpp"
 #include "engine/logistics.hpp"
 #include "engine/synapse_network.hpp"
+#include "engine/faction_rule_module.hpp"
 #include "engine/command_orders.hpp"
 #include "engine/lanchester.hpp"
 #include "engine/projection.hpp"
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace omnisbelli {
 
@@ -27,6 +29,9 @@ public:
     LogisticsSystem logistics;
     SynapseNetwork synapse;
     CommandOrders orders;
+
+    std::unique_ptr<IFactionRuleModule> defender_rules;
+    std::unique_ptr<IFactionRuleModule> attacker_rules;
 
     CombatStepTelemetry last_telemetry;
     PlanetaryProjection cached_projection;
@@ -51,8 +56,12 @@ public:
     bool trigger_doctrine(DoctrineType type);
     void run_planetary_projection(int iterations = 30);
 
+    void set_defender_faction(const std::string& faction_id);
+    void set_attacker_faction(const std::string& faction_id);
+    void sync_rule_modules();
+
     void reset();
-    void load_scenario(int preset_index); // 0: Tyran 2M vs 100M, 1: Macragge Polar, 2: Krieg Trench, 3: Armageddon Orks, 4: Necron Awakening
+    void load_scenario(int preset_index);
     std::string get_formatted_sim_time() const;
 };
 
