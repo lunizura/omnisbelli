@@ -1,4 +1,5 @@
 #include "ui/input_handler.hpp"
+#include "gfx/audio_sfx.hpp"
 
 namespace omnisbelli {
 
@@ -40,47 +41,81 @@ bool InputHandler::handle_key_down(
         }
         return true;
 
+    case 'F':
+        if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
+            static const char* defender_factions[] = {
+                "imperium", "death_guard", "sororitas", "mechanicus",
+                "world_eaters", "krieg", "iron_warriors", "custodes"
+            };
+            static int def_idx = 0;
+            def_idx = (def_idx + 1) % 8;
+            sim.set_defender_faction(defender_factions[def_idx]);
+            ui.customizer_selected_index = 0;
+            return true;
+        }
+        break;
+
+    case 'G':
+        if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
+            static const char* attacker_factions[] = {
+                "tyranids", "death_guard", "world_eaters", "sororitas",
+                "mechanicus", "orks", "necrons", "iron_warriors"
+            };
+            static int att_idx = 0;
+            att_idx = (att_idx + 1) % 8;
+            sim.set_attacker_faction(attacker_factions[att_idx]);
+            ui.customizer_selected_index = 0;
+            return true;
+        }
+        break;
+
     case 'L':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
             static int preset_cursor = 0;
-            preset_cursor = (preset_cursor + 1) % 5;
+            preset_cursor = (preset_cursor + 1) % 10;
             sim.load_scenario(preset_cursor);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
 
     case '6':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            sim.load_scenario(0);
+            sim.load_scenario(5);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
     case '7':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            sim.load_scenario(1);
+            sim.load_scenario(6);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
     case '8':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            sim.load_scenario(2);
+            sim.load_scenario(7);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
     case '9':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            sim.load_scenario(3);
+            sim.load_scenario(8);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
     case '0':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            sim.load_scenario(4);
+            sim.load_scenario(9);
+            ui.customizer_selected_index = 0;
             return true;
         }
         break;
 
-    // Tabs 1-5 ALWAYS switch screens reliably!
+    // Tabs 1-5 switch screens
     case '1':
         ui.switch_tab(ActiveScreenTab::TAB_TACTICAL);
         return true;
