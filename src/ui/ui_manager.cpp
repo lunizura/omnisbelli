@@ -253,9 +253,10 @@ void UIManager::render_tactical_screen(PixelFramebuffer& fb, const SimulationEng
     Rasterizer::draw_frame(fb, 320, 28, 316, 215, theme.border, theme.bg_panel, true);
     BitmapFont::draw_string(fb, 324, 32, "[TACTICAL CASUALTY TELEMETRY]", theme.text_highlight, 0, true, 1);
 
-    // Human defenders stats
+    // Defender stats
     BitmapFont::draw_glyph(fb, 324, 46, TacticalGlyph::AQUILA, theme.friendly_unit, 1);
-    BitmapFont::draw_string(fb, 336, 46, "IMPERIAL DEFENSE FORCE:", theme.text_highlight, 0, true, 1);
+    std::string def_header = sim.defenders.name.substr(0, 24) + ":";
+    BitmapFont::draw_string(fb, 336, 46, def_header, theme.text_highlight, 0, true, 1);
 
     double human_init = sim.defenders.get_total_initial_count();
     double human_curr = sim.defenders.get_total_count();
@@ -271,9 +272,10 @@ void UIManager::render_tactical_screen(PixelFramebuffer& fb, const SimulationEng
 
     Rasterizer::draw_hline(fb, 324, 77, 308, theme.border);
 
-    // Tyranid biomass stats
+    // Attacker stats
     BitmapFont::draw_glyph(fb, 324, 82, TacticalGlyph::BIOHAZARD, theme.hostile_unit, 1);
-    BitmapFont::draw_string(fb, 336, 82, "HIVE FLEET SWARM BIOMASS:", theme.alert_red, 0, true, 1);
+    std::string att_header = sim.attackers.name.substr(0, 24) + ":";
+    BitmapFont::draw_string(fb, 336, 82, att_header, theme.alert_red, 0, true, 1);
 
     double swarm_init = sim.attackers.get_total_initial_count();
     double swarm_curr = sim.attackers.get_total_count();
@@ -289,20 +291,19 @@ void UIManager::render_tactical_screen(PixelFramebuffer& fb, const SimulationEng
 
     Rasterizer::draw_hline(fb, 324, 113, 308, theme.border);
 
-    // Synapse Network Integrity
+    // Faction Signature Mechanics & Network Integrity
     BitmapFont::draw_glyph(fb, 324, 118, TacticalGlyph::SKULL, theme.synapse_glow, 1);
+    double ratio = sim.attacker_rules ? sim.attacker_rules->get_telemetry_ratio() : sim.synapse.synapse_ratio;
+    std::string tag = sim.attacker_rules ? sim.attacker_rules->get_telemetry_tag() : sim.synapse.get_state_tag();
     std::ostringstream syn_txt;
-    syn_txt << "SYNAPSE INTEGRITY: " << static_cast<int>(std::round(sim.synapse.synapse_ratio * 100.0)) << "%";
+    syn_txt << "FACTION MATRIX: " << static_cast<int>(std::round(ratio * 100.0)) << "%";
     BitmapFont::draw_string(fb, 336, 118, syn_txt.str(), theme.text_highlight, 0, true, 1);
 
-    Rasterizer::draw_progress_bar(fb, 324, 128, 140, 7, std::clamp(sim.synapse.synapse_ratio, 0.0, 1.0), theme.synapse_glow, theme.bar_empty, theme.border, true);
-    BitmapFont::draw_string(fb, 470, 128, sim.synapse.get_state_tag(), sim.synapse.is_in_instinctive_frenzy() ? theme.alert_red : theme.text_dim, 0, true, 1);
+    Rasterizer::draw_progress_bar(fb, 324, 128, 140, 7, std::clamp(ratio, 0.0, 1.0), theme.synapse_glow, theme.bar_empty, theme.border, true);
+    BitmapFont::draw_string(fb, 470, 128, tag.substr(0, 18), theme.text_dim, 0, true, 1);
 
-    if (sim.synapse.is_in_instinctive_frenzy()) {
-        BitmapFont::draw_string(fb, 324, 138, "[!] FERAL FRENZY: INFIGHTING ACTIVE (-70% ATK)", theme.alert_red, 0, true, 1);
-    } else {
-        BitmapFont::draw_string(fb, 324, 138, "Hive Mind actively coordinating assault waves.", theme.text_dim, 0, true, 1);
-    }
+    std::string desc = sim.attacker_rules ? sim.attacker_rules->get_status_description() : sim.synapse.get_status_description();
+    BitmapFont::draw_string(fb, 324, 138, desc.substr(0, 48), theme.alert_amber, 0, true, 1);
 
     Rasterizer::draw_hline(fb, 324, 148, 308, theme.border);
 
@@ -533,13 +534,14 @@ void UIManager::render_customizer_screen(PixelFramebuffer& fb, const SimulationE
 
     BitmapFont::draw_string(
         fb, 8, 44,
-        "CONTROLS: [UP/DOWN] Select  [LEFT/RIGHT] Scale (x0.5/x2)  [TAB] Army  [L/6-0] Preset  [1-5] Tabs",
+        "CONTROLS: [UP/DN] Select [L/R] Scale [F] Def Faction [G] Att Faction [TAB] Side [L/6-0] Preset",
         theme.alert_amber, 0, true, 1
     );
 
-    // Left column: Imperium Units
+    // Left column: Defender Units
     Rasterizer::draw_rect(fb, 10, 58, 305, 230, !customizer_editing_swarm ? theme.text_highlight : theme.border);
-    BitmapFont::draw_string(fb, 16, 62, "IMPERIAL DEFENDERS (HUMANS)", !customizer_editing_swarm ? theme.text_highlight : theme.text_dim, 0, true, 1);
+    std::string def_box_title = "DEFENDERS: " + sim.defenders.name.substr(0, 20);
+    BitmapFont::draw_string(fb, 16, 62, def_box_title, !customizer_editing_swarm ? theme.text_highlight : theme.text_dim, 0, true, 1);
 
     int row_y = 76;
     for (size_t i = 0; i < sim.defenders.units.size(); i++) {
@@ -559,9 +561,10 @@ void UIManager::render_customizer_screen(PixelFramebuffer& fb, const SimulationE
         row_y += 21;
     }
 
-    // Right column: Tyranid / Enemy Swarm Units
+    // Right column: Attacker Units
     Rasterizer::draw_rect(fb, 325, 58, 305, 230, customizer_editing_swarm ? theme.text_highlight : theme.border);
-    BitmapFont::draw_string(fb, 331, 62, "INVADING SWARM BIOMASS", customizer_editing_swarm ? theme.text_highlight : theme.text_dim, 0, true, 1);
+    std::string att_box_title = "ATTACKERS: " + sim.attackers.name.substr(0, 20);
+    BitmapFont::draw_string(fb, 331, 62, att_box_title, customizer_editing_swarm ? theme.text_highlight : theme.text_dim, 0, true, 1);
 
     row_y = 76;
     for (size_t i = 0; i < sim.attackers.units.size(); i++) {
