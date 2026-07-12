@@ -523,12 +523,126 @@ void test_sororitas_miracle_dice() {
     std::cout << "       PASS: Martyrdom faith accumulation, 4++ aegis shield, and Holy Trinity verified.\n";
 }
 
+void test_world_eaters_blood_tithe() {
+    std::cout << "[TEST] 21. World Eaters Blood Tithe of Khorne & Apotheosis..." << std::endl;
+    WorldEatersMechanic we;
+    ArmyRoster friendly = ArmyRoster::create_world_eaters(1.0);
+    ArmyRoster enemy = ArmyRoster::create_death_guard(1.0);
+    Sector sec(1, "Slaughter Pit", "SEC-PIT", "Blood arena", 10000.0, 0.20, 1e7);
+
+    // Accumulate kills: 80,000 kills = 1 Tithe Point
+    CasualtyEvent cas{ 800000.0, 8000000.0, "all", true };
+    we.on_casualty_event(friendly, enemy, cas);
+    OMNIS_ASSERT(std::abs(we.blood_tithe_points - 10.0) < 1e-3);
+
+    // Pre-combat tick updates tithe tier
+    we.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(we.tithe_tier == 1);
+
+    // Tier 1 Spiteful Demise damage on friendly casualty
+    double prev_spite = we.spiteful_demise_damage_dealt;
+    we.on_casualty_event(friendly, enemy, CasualtyEvent{ 100.0, 17000.0, "infantry", true });
+    OMNIS_ASSERT(we.spiteful_demise_damage_dealt > prev_spite);
+
+    // Advance to Tier 3 (>= 50 pts: +35% DPS, +0.15 AP)
+    we.blood_tithe_points = 60.0;
+    we.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(we.tithe_tier == 3);
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    we.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(std::abs(pkt.raw_damage - 1350.0) < 1e-3);
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.15);
+
+    // Advance to Tier 4 (>= 100 pts: Bloodthirster summoning)
+    we.blood_tithe_points = 105.0;
+    we.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(we.tithe_tier == 4);
+    OMNIS_ASSERT(we.bloodthirsters_summoned > 0.0);
+
+    std::cout << "       PASS: Blood Tithe tiers 1-4, Spiteful Demise, and Bloodthirster summoning verified.\n";
+}
+
+void test_cross_faction_lanchester_matrix() {
+    std::cout << "[TEST] 22. Cross-Faction Lanchester Modular Pipeline & Any-vs-Any Matchups..." << std::endl;
+    
+    // Matchup 1: Death Guard defenders vs World Eaters attackers
+    {
+        auto dg_rules = create_faction_rule_module("death_guard");
+        auto we_rules = create_faction_rule_module("world_eaters");
+        ArmyRoster def = ArmyRoster::create_death_guard(1.0);
+        ArmyRoster att = ArmyRoster::create_world_eaters(1.0);
+        Sector sec(1, "Istvaan Trench", "SEC-IST", "Trench line", 50000.0, 0.40, 1e8);
+        LogisticsSystem log;
+        CombatStepTelemetry tel;
+
+        LanchesterCombat::compute_combat_tick(def, att, sec, log, *dg_rules, *we_rules, 1.0, tel);
+        OMNIS_ASSERT(tel.defender_dps_effective > 0.0);
+        OMNIS_ASSERT(tel.attacker_dps_effective > 0.0);
+        OMNIS_ASSERT(!std::isnan(tel.defender_casualties_step));
+        OMNIS_ASSERT(!std::isnan(tel.attacker_casualties_step));
+    }
+
+    // Matchup 2: Adepta Sororitas defenders vs Adeptus Mechanicus attackers
+    {
+        auto sor_rules = create_faction_rule_module("sororitas");
+        auto mech_rules = create_faction_rule_module("mechanicus");
+        ArmyRoster def = ArmyRoster::create_adepta_sororitas(1.0);
+        ArmyRoster att = ArmyRoster::create_adeptus_mechanicus(1.0);
+        Sector sec(1, "Cathedral Gate", "SEC-CATH", "Sanctuary", 30000.0, 0.60, 1e8);
+        LogisticsSystem log;
+        CombatStepTelemetry tel;
+
+        LanchesterCombat::compute_combat_tick(def, att, sec, log, *sor_rules, *mech_rules, 1.0, tel);
+        OMNIS_ASSERT(tel.defender_dps_effective > 0.0);
+        OMNIS_ASSERT(tel.attacker_dps_effective > 0.0);
+    }
+
+    // Matchup 3: Dynamic SimulationEngine Faction Switching
+    {
+        SimulationEngine sim;
+        sim.set_defender_faction("sororitas");
+        sim.set_attacker_faction("death_guard");
+        OMNIS_ASSERT(sim.defenders.faction_id == "sororitas");
+        OMNIS_ASSERT(sim.attackers.faction_id == "death_guard");
+
+        sim.update(0.5);
+        OMNIS_ASSERT(sim.sim_time_seconds > 0.0);
+        OMNIS_ASSERT(!sim.defenders.is_defeated());
+    }
+
+    std::cout << "       PASS: Any-vs-any cross-faction differential matrix and simulation engine validated.\n";
+}
+
 int main() {
+    std::cout << "=================================================================\n";
+    std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
+    std::cout << "=================================================================\n";
+
+    test_unit_mechanics();
+    test_lanchester_laws();
+    test_excess_damage_cascade();
+    test_synapse_disruption();
+    test_sector_graph_and_fallbacks();
+    test_logistics_depletion();
+    test_monte_carlo_projections();
+    test_command_doctrines();
+    test_fortification_absorption_and_progression();
+    test_environmental_hazards_and_breaches();
+    test_commissar_execution_mechanic();
+    test_telemetry_export();
+    test_modular_factions();
+    test_modular_doctrine_execution();
     test_tau_aeldari_custodes_rosters();
     test_extreme_scale_billion_entities();
     test_death_guard_disgustingly_resilient();
     test_death_guard_contagion_decay();
     test_mechanicus_canticle_stances();
     test_sororitas_miracle_dice();
+    test_world_eaters_blood_tithe();
+    test_cross_faction_lanchester_matrix();
+
+    std::cout << "=================================================================\n";
+    std::cout << "  ALL 22 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "=================================================================\n";
     return 0;
 }
