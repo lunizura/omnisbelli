@@ -459,10 +459,76 @@ void test_death_guard_contagion_decay() {
     std::cout << "       PASS: Contagion aura progression, fortification corrosion, and AP verified.\n";
 }
 
+void test_mechanicus_canticle_stances() {
+    std::cout << "[TEST] 19. Adeptus Mechanicus Canticle Stances & Rad-Saturation..." << std::endl;
+    MechanicusMechanic admech;
+    ArmyRoster friendly = ArmyRoster::create_adeptus_mechanicus(1.0);
+    ArmyRoster enemy = ArmyRoster::create_ork_waaagh(1.0);
+    Sector sec(1, "Forge Sector", "SEC-FORGE", "Industrial", 10000.0, 0.40, 1e7);
+
+    // Stance 1: Protector Imperative (+35% ranged)
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    admech.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(std::abs(pkt.raw_damage - 1350.0) < 1e-3);
+    OMNIS_ASSERT(pkt.armor_penetration == 0.10);
+
+    // Stance 2: Conqueror Imperative (+45% melee)
+    admech.set_protocol(CanticleProtocol::CONQUEROR_IMPERATIVE);
+    pkt = DamagePacket{ 1000.0, 0.0, 1.0, false };
+    admech.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(std::abs(pkt.raw_damage - 1450.0) < 1e-3);
+
+    // Stance 3: Shroudpsalm (30% damage absorbed)
+    admech.set_protocol(CanticleProtocol::SHROUDPSALM_STEALTH);
+    double mit = admech.apply_incoming_mitigation(friendly, 1000.0, 1.0);
+    OMNIS_ASSERT(std::abs(mit - 700.0) < 1e-3);
+
+    // Rad-saturation suppresses unsealed enemy organic HP
+    UnitClass* boyz = enemy.find_unit("ork_boyz");
+    OMNIS_ASSERT(boyz != nullptr);
+    double initial_hp = boyz->hp_per_unit;
+    admech.pre_combat_tick(friendly, enemy, sec, 10.0);
+    OMNIS_ASSERT(boyz->hp_per_unit < initial_hp);
+
+    std::cout << "       PASS: 4 Canticle protocols, tactical stances, and Rad-Saturation verified.\n";
+}
+
+void test_sororitas_miracle_dice() {
+    std::cout << "[TEST] 20. Adepta Sororitas Miracle Dice & Acts of Faith..." << std::endl;
+    SororitasMechanic sor;
+    ArmyRoster friendly = ArmyRoster::create_adepta_sororitas(1.0);
+    ArmyRoster enemy = ArmyRoster::create_world_eaters(1.0);
+
+    // Suffer friendly casualties to generate Miracle Points (12,000 casualties per point)
+    double init_points = sor.miracle_points; // 15.0
+    CasualtyEvent cas{ 24000.0, 600000.0, "infantry", true };
+    sor.on_casualty_event(friendly, enemy, cas);
+    OMNIS_ASSERT(std::abs(sor.miracle_points - (init_points + 2.0)) < 1e-3);
+
+    // Trigger divine intervention shield (absorbs 50% damage)
+    sor.miracle_points = 30.0;
+    bool ok = sor.trigger_divine_intervention();
+    OMNIS_ASSERT(ok && sor.divine_shield_active);
+    double incoming = 10000.0;
+    double mitigated = sor.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(std::abs(mitigated - 5000.0) < 1e-3);
+
+    // Holy Trinity Purity bonus when faith >= 50
+    sor.miracle_points = 100.0;
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    sor.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(std::abs(pkt.raw_damage - 1350.0) < 1e-3);
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.15);
+
+    std::cout << "       PASS: Martyrdom faith accumulation, 4++ aegis shield, and Holy Trinity verified.\n";
+}
+
 int main() {
     test_tau_aeldari_custodes_rosters();
     test_extreme_scale_billion_entities();
     test_death_guard_disgustingly_resilient();
     test_death_guard_contagion_decay();
+    test_mechanicus_canticle_stances();
+    test_sororitas_miracle_dice();
     return 0;
 }
