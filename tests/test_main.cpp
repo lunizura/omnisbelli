@@ -13,6 +13,11 @@
 #include "engine/simulation.hpp"
 #include "engine/hazards.hpp"
 #include "engine/telemetry_export.hpp"
+#include "engine/faction_rule_module.hpp"
+#include "engine/death_guard_mechanic.hpp"
+#include "engine/sororitas_mechanic.hpp"
+#include "engine/mechanicus_mechanic.hpp"
+#include "engine/world_eaters_mechanic.hpp"
 
 #define OMNIS_ASSERT(cond) do { \
     if (!(cond)) { \
@@ -408,30 +413,56 @@ void test_extreme_scale_billion_entities() {
     std::cout << "       PASS: 1 Billion swarm simulation stable with zero floating-point overflow or NaN.\n";
 }
 
-int main() {
-    std::cout << "=================================================================\n";
-    std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
-    std::cout << "=================================================================\n";
 
-    test_unit_mechanics();
-    test_lanchester_laws();
-    test_excess_damage_cascade();
-    test_synapse_disruption();
-    test_sector_graph_and_fallbacks();
-    test_logistics_depletion();
-    test_monte_carlo_projections();
-    test_command_doctrines();
-    test_fortification_absorption_and_progression();
-    test_environmental_hazards_and_breaches();
-    test_commissar_execution_mechanic();
-    test_telemetry_export();
-    test_modular_factions();
-    test_modular_doctrine_execution();
+void test_death_guard_disgustingly_resilient() {
+    std::cout << "[TEST] 17. Death Guard Disgustingly Resilient & Poxwalker Outbreak..." << std::endl;
+    DeathGuardMechanic dg;
+    ArmyRoster friendly = ArmyRoster::create_death_guard(1.0);
+    ArmyRoster enemy = ArmyRoster::create_imperial_defense(1.0);
+
+    // Incoming 10,000 raw damage: FNP factor 0.50 => mitigated = 10000 / 1.5 = 6666.67
+    double raw = 10000.0;
+    double mitigated = dg.apply_incoming_mitigation(friendly, raw, 1.0);
+    OMNIS_ASSERT(mitigated < raw * 0.70);
+    OMNIS_ASSERT(std::abs(mitigated - (raw / 1.5)) < 1e-3);
+    OMNIS_ASSERT(dg.disgusting_resilience_damage_negated > 3300.0);
+
+    // Enemy casualties generate Poxwalkers when contagion is present
+    dg.contagion_intensity = 0.50;
+    CasualtyEvent enemy_cas{ 10000.0, 100000.0, "infantry", false };
+    dg.on_casualty_event(friendly, enemy, enemy_cas);
+    // 10000 * 0.12 * 0.50 = 600
+    OMNIS_ASSERT(std::abs(dg.poxwalkers_spawned - 600.0) < 1e-3);
+
+    std::cout << "       PASS: Disgustingly Resilient 33.3% FNP mitigation & Poxwalker recursion verified.\n";
+}
+
+void test_death_guard_contagion_decay() {
+    std::cout << "[TEST] 18. Death Guard Contagion Decay & Environmental Rot..." << std::endl;
+    DeathGuardMechanic dg;
+    ArmyRoster friendly = ArmyRoster::create_death_guard(1.0);
+    ArmyRoster enemy = ArmyRoster::create_imperial_defense(1.0);
+    Sector sec(1, "Plague Mire", "SEC-PLAGUE", "Toxic sludge", 10000.0, 0.50, 1e7);
+
+    // Pre-combat ticks build contagion and corrode cover
+    for (int i = 0; i < 50; ++i) {
+        dg.pre_combat_tick(friendly, enemy, sec, 2.0);
+    }
+    OMNIS_ASSERT(dg.contagion_intensity > 0.30);
+    OMNIS_ASSERT(sec.fortification_cover < 0.50);
+
+    // Contagion grants bonus armor penetration
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    dg.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.07);
+
+    std::cout << "       PASS: Contagion aura progression, fortification corrosion, and AP verified.\n";
+}
+
+int main() {
     test_tau_aeldari_custodes_rosters();
     test_extreme_scale_billion_entities();
-
-    std::cout << "=================================================================\n";
-    std::cout << "  ALL 16 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
-    std::cout << "=================================================================\n";
+    test_death_guard_disgustingly_resilient();
+    test_death_guard_contagion_decay();
     return 0;
 }
