@@ -5,6 +5,10 @@
 #include "engine/sororitas_mechanic.hpp"
 #include "engine/mechanicus_mechanic.hpp"
 #include "engine/world_eaters_mechanic.hpp"
+#include "engine/ork_waaagh_mechanic.hpp"
+#include "engine/necron_dynasty_mechanic.hpp"
+#include "engine/tau_empire_mechanic.hpp"
+#include "engine/custodes_mechanic.hpp"
 #include <algorithm>
 
 namespace omnisbelli {
@@ -93,15 +97,15 @@ std::unique_ptr<IFactionRuleModule> create_faction_rule_module(const std::string
     } else if (faction_id == "imperium") {
         return std::make_unique<GenericFactionModule>("imperium", "IMPERIAL COGITATOR BATTLEGRID");
     } else if (faction_id == "orks") {
-        return std::make_unique<GenericFactionModule>("orks", "WAAAGH! HORDE MOMENTUM");
+        return std::make_unique<OrkWaaaghMechanic>();
     } else if (faction_id == "necrons") {
-        return std::make_unique<GenericFactionModule>("necrons", "LIVING METAL REANIMATION PROTOCOLS");
-    } else if (faction_id == "tau") {
-        return std::make_unique<GenericFactionModule>("tau", "MARKERLIGHT TARGETING NETWORK");
-    } else if (faction_id == "aeldari") {
-        return std::make_unique<GenericFactionModule>("aeldari", "WARP PATH AND BATTLE FOCUS");
-    } else if (faction_id == "custodes") {
-        return std::make_unique<GenericFactionModule>("custodes", "SHIELD-HOST AURIC RESOLVE");
+        return std::make_unique<NecronDynastyMechanic>();
+    } else if (faction_id == "tau" || faction_id == "tau_empire") {
+        return std::make_unique<TauEmpireMechanic>();
+    } else if (faction_id == "custodes" || faction_id == "adeptus_custodes") {
+        return std::make_unique<CustodesMechanic>();
+    } else if (faction_id == "aeldari" || faction_id == "eldar") {
+        return std::make_unique<GenericFactionModule>("aeldari", "ASURYANI WEBWAY MESH");
     } else if (faction_id == "krieg") {
         return std::make_unique<GenericFactionModule>("krieg", "KRIEG NO-STEP-BACK ATTRITION");
     } else if (faction_id == "iron_warriors") {
