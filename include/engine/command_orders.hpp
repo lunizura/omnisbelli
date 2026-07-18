@@ -27,14 +27,18 @@ struct DoctrineInfo {
     bool is_available;
 };
 
+class IFactionRuleModule;
+
 class CommandOrders {
 public:
+    std::string current_faction_id;
     std::vector<DoctrineInfo> doctrines;
     bool exterminatus_triggered;
     std::string last_action_message;
 
     CommandOrders();
 
+    void configure_for_faction(const std::string& faction_id);
     void update(double dt, const SectorGraph& sector_graph);
 
     bool trigger_doctrine(
@@ -43,7 +47,8 @@ public:
         ArmyRoster& attackers,
         SectorGraph& sector_graph,
         LogisticsSystem& logistics,
-        SynapseNetwork& synapse
+        SynapseNetwork& synapse,
+        IFactionRuleModule* rule_module = nullptr
     );
 
     const DoctrineInfo* get_doctrine(DoctrineType type) const;
