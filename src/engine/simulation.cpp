@@ -33,6 +33,7 @@ SimulationEngine::SimulationEngine()
 void SimulationEngine::sync_rule_modules() {
     defender_rules = create_faction_rule_module(defenders.faction_id);
     attacker_rules = create_faction_rule_module(attackers.faction_id);
+    orders.configure_for_faction(defenders.faction_id);
 }
 
 void SimulationEngine::set_defender_faction(const std::string& faction_id) {
@@ -43,12 +44,15 @@ void SimulationEngine::set_defender_faction(const std::string& faction_id) {
     else if (faction_id == "world_eaters" || faction_id == "khorne") defenders = ArmyRoster::create_world_eaters(1.0);
     else if (faction_id == "krieg") defenders = ArmyRoster::create_krieg_siege_army(1.0);
     else if (faction_id == "iron_warriors") defenders = ArmyRoster::create_iron_warriors(1.0);
-    else if (faction_id == "custodes") defenders = ArmyRoster::create_custodes_vanguard(1.0);
-    else if (faction_id == "tau") defenders = ArmyRoster::create_tau_empire(1.0);
-    else if (faction_id == "aeldari") defenders = ArmyRoster::create_aeldari_host(1.0);
+    else if (faction_id == "custodes" || faction_id == "adeptus_custodes") defenders = ArmyRoster::create_custodes_vanguard(1.0);
+    else if (faction_id == "tau" || faction_id == "tau_empire") defenders = ArmyRoster::create_tau_empire(1.0);
+    else if (faction_id == "aeldari" || faction_id == "eldar") defenders = ArmyRoster::create_aeldari_host(1.0);
+    else if (faction_id == "orks" || faction_id == "ork") defenders = ArmyRoster::create_ork_waaagh(1.0);
+    else if (faction_id == "necrons" || faction_id == "necron") defenders = ArmyRoster::create_necron_dynasty(1.0);
     else defenders = ArmyRoster::create_imperial_defense(1.0);
 
     defender_rules = create_faction_rule_module(defenders.faction_id);
+    orders.configure_for_faction(defenders.faction_id);
     add_event("[CUSTOMIZER] DEFENDER FACTION SET TO: " + defenders.name);
     run_planetary_projection(20);
 }
@@ -59,10 +63,13 @@ void SimulationEngine::set_attacker_faction(const std::string& faction_id) {
     else if (faction_id == "sororitas" || faction_id == "adepta_sororitas") attackers = ArmyRoster::create_adepta_sororitas(1.0);
     else if (faction_id == "mechanicus" || faction_id == "adeptus_mechanicus") attackers = ArmyRoster::create_adeptus_mechanicus(1.0);
     else if (faction_id == "world_eaters" || faction_id == "khorne") attackers = ArmyRoster::create_world_eaters(1.0);
-    else if (faction_id == "orks") attackers = ArmyRoster::create_ork_waaagh(1.0);
-    else if (faction_id == "necrons") attackers = ArmyRoster::create_necron_dynasty(1.0);
+    else if (faction_id == "orks" || faction_id == "ork") attackers = ArmyRoster::create_ork_waaagh(1.0);
+    else if (faction_id == "necrons" || faction_id == "necron") attackers = ArmyRoster::create_necron_dynasty(1.0);
     else if (faction_id == "iron_warriors") attackers = ArmyRoster::create_iron_warriors(1.0);
     else if (faction_id == "chaos") attackers = ArmyRoster::create_chaos_incursion(1.0);
+    else if (faction_id == "tau" || faction_id == "tau_empire") attackers = ArmyRoster::create_tau_empire(1.0);
+    else if (faction_id == "aeldari" || faction_id == "eldar") attackers = ArmyRoster::create_aeldari_host(1.0);
+    else if (faction_id == "custodes" || faction_id == "adeptus_custodes") attackers = ArmyRoster::create_custodes_vanguard(1.0);
     else attackers = ArmyRoster::create_tyranid_swarm(1.0);
 
     attacker_rules = create_faction_rule_module(attackers.faction_id);
@@ -184,7 +191,8 @@ bool SimulationEngine::trigger_doctrine(DoctrineType type) {
         attackers,
         sector_graph,
         logistics,
-        synapse
+        synapse,
+        defender_rules.get()
     );
     if (ok) {
         add_event(orders.last_action_message);
