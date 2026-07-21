@@ -385,9 +385,15 @@ void UIManager::render_tactical_screen(PixelFramebuffer& fb, const SimulationEng
     if (action_sub.length() > 37) action_sub = action_sub.substr(0, 37);
     BitmapFont::draw_string(fb, 330, 264, "> " + action_sub, theme.alert_amber, 0, true, 1);
 
-    BitmapFont::draw_string(fb, 330, 278, "F1: Promethium Moat (-12% Breach)", theme.text_dim, 0, true, 1);
-    BitmapFont::draw_string(fb, 330, 290, "F2: Titan Volley    F3: Astartes Decap", theme.text_dim, 0, true, 1);
-    BitmapFont::draw_string(fb, 330, 302, "F4: Tactical Retreat F8: Exterminatus", theme.text_dim, 0, true, 1);
+    std::string l1 = (sim.orders.doctrines.size() > 1) ?
+        ("F1: " + sim.orders.doctrines[0].name.substr(0, 14) + "  F2: " + sim.orders.doctrines[1].name.substr(0, 14)) : "F1/F2 Ready";
+    std::string l2 = (sim.orders.doctrines.size() > 3) ?
+        ("F3: " + sim.orders.doctrines[2].name.substr(0, 14) + "  F4: " + sim.orders.doctrines[3].name.substr(0, 14)) : "F3/F4 Ready";
+    std::string l3 = (sim.orders.doctrines.size() > 5) ?
+        ("F5: " + sim.orders.doctrines[4].name.substr(0, 14) + "  F8: " + sim.orders.doctrines[5].name.substr(0, 14)) : "F5/F8 Ready";
+    BitmapFont::draw_string(fb, 330, 278, l1, theme.text_dim, 0, true, 1);
+    BitmapFont::draw_string(fb, 330, 290, l2, theme.text_dim, 0, true, 1);
+    BitmapFont::draw_string(fb, 330, 302, l3, theme.text_dim, 0, true, 1);
 }
 
 void UIManager::render_radar_screen(PixelFramebuffer& fb, const SimulationEngine& sim, const ThemeColors& theme) {
