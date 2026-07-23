@@ -1,0 +1,36 @@
+{
+  "engine": "OMNISBELLI v1.0.0",
+  "defender_faction": "imperium",
+  "attacker_faction": "tyranids",
+  "time_multiplier": 5.0,
+  "active_sector_index": 0,
+  "logistics": {
+    "laspack_cells": 12000000,
+    "bolter_rounds": 6500000,
+    "artillery_shells": 900000,
+    "promethium_liters": 3000000
+  },
+  "units": [
+    {
+      "id": "cadian_infantry",
+      "count": 1250000,
+      "hp": 18.0,
+      "armor": 0.20,
+      "dps": 3.8
+    },
+    {
+      "id": "leman_russ",
+      "count": 3000,
+      "hp": 4000.0,
+      "armor": 0.78,
+      "dps": 320.0
+    },
+    {
+      "id": "termagant",
+      "count": 40000000,
+      "hp": 8.0,
+      "armor": 0.05,
+      "dps": 1.5
+    }
+  ]
+}
