@@ -31,6 +31,11 @@ set(ENGINE_SOURCES
     src/engine/sororitas_mechanic.cpp
     src/engine/mechanicus_mechanic.cpp
     src/engine/world_eaters_mechanic.cpp
+    src/engine/ork_waaagh_mechanic.cpp
+    src/engine/necron_dynasty_mechanic.cpp
+    src/engine/tau_empire_mechanic.cpp
+    src/engine/custodes_mechanic.cpp
+    src/engine/config_loader.cpp
 )
 
 set(GFX_SOURCES
