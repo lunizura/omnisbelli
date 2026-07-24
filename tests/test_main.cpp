@@ -18,6 +18,11 @@
 #include "engine/sororitas_mechanic.hpp"
 #include "engine/mechanicus_mechanic.hpp"
 #include "engine/world_eaters_mechanic.hpp"
+#include "engine/ork_waaagh_mechanic.hpp"
+#include "engine/necron_dynasty_mechanic.hpp"
+#include "engine/tau_empire_mechanic.hpp"
+#include "engine/custodes_mechanic.hpp"
+#include "engine/config_loader.hpp"
 
 #define OMNIS_ASSERT(cond) do { \
     if (!(cond)) { \
@@ -613,6 +618,381 @@ void test_cross_faction_lanchester_matrix() {
     std::cout << "       PASS: Any-vs-any cross-faction differential matrix and simulation engine validated.\n";
 }
 
+void test_ork_waaagh_mechanics() {
+    std::cout << "[TEST] 23. Ork WAAAGH! Momentum Curve, Dakkadakka, and Grot Shields..." << std::endl;
+    OrkWaaaghMechanic ork;
+    ArmyRoster friendly = ArmyRoster::create_ork_waaagh(1.0);
+    ArmyRoster enemy = ArmyRoster::create_imperial_defense(1.0);
+    Sector sec(1, "Scrap Plain", "SEC-SCRAP", "Wastes", 50000.0, 0.20, 1e7);
+
+    // Initial momentum
+    OMNIS_ASSERT(ork.waaagh_momentum >= 15.0);
+
+    // Dakkadakka burst outgoing damage
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    ork.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(pkt.raw_damage > 1150.0); // +20% dakkadakka
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.08);
+
+    // Grot Shields: absorbs 20% incoming damage
+    double incoming = 10000.0;
+    double mitigated = ork.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(std::abs(mitigated - 8000.0) < 1e-3);
+    OMNIS_ASSERT(ork.grot_shields_absorbed_damage >= 2000.0);
+
+    // Casualties build WAAAGH! momentum
+    double prev_mom = ork.waaagh_momentum;
+    CasualtyEvent cas{ 600000.0, 6000000.0, "infantry", true };
+    ork.on_casualty_event(friendly, enemy, cas);
+    OMNIS_ASSERT(ork.waaagh_momentum >= prev_mom + 9.9);
+
+    // Trigger WAAAGH! Roar
+    ork.trigger_waaagh_roar();
+    OMNIS_ASSERT(ork.waaagh_frenzy_active);
+    DamagePacket frenzy_pkt{ 1000.0, 0.0, 1.0, false };
+    ork.modify_outgoing_damage(friendly, frenzy_pkt, 1.0);
+    OMNIS_ASSERT(frenzy_pkt.raw_damage >= 1600.0); // frenzy + dakkadakka
+
+    std::cout << "       PASS: WAAAGH! momentum, Dakkadakka burst hits, and Grot Shields verified.\n";
+}
+
+void test_necron_dynasty_mechanics() {
+    std::cout << "[TEST] 24. Necron Reanimation Protocols, Living Metal, and Phase-Out..." << std::endl;
+    NecronDynastyMechanic necron;
+    ArmyRoster friendly = ArmyRoster::create_necron_dynasty(1.0);
+    ArmyRoster enemy = ArmyRoster::create_imperial_defense(1.0);
+    Sector sec(1, "Tomb Catacomb", "SEC-TOMB", "Necron Vault", 25000.0, 0.50, 1e8);
+
+    // Outgoing Gauss flaying AP
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    necron.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.12);
+
+    // Passive Living metal chassis mitigation (10%)
+    double incoming = 10000.0;
+    double mitigated = necron.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(std::abs(mitigated - 9000.0) < 1e-3);
+
+    // Casualties feed pending reanimation pool (20%)
+    UnitClass* warriors = friendly.find_unit("necron_warrior");
+    OMNIS_ASSERT(warriors != nullptr);
+    double initial_w = warriors->count;
+    warriors->count -= 50000.0; // simulate losses
+    CasualtyEvent cas{ 50000.0, 1200000.0, "infantry", true };
+    necron.on_casualty_event(friendly, enemy, cas);
+    OMNIS_ASSERT(necron.pending_reanimation_pool >= 10000.0);
+
+    // Pre-combat tick triggers Reanimation Protocol, reconstituting fallen warriors
+    necron.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(necron.total_reanimated_units > 0.0);
+    OMNIS_ASSERT(warriors->count > initial_w - 50000.0);
+
+    // Living metal repair on Monolith
+    UnitClass* mono = friendly.find_unit("monolith");
+    OMNIS_ASSERT(mono != nullptr);
+    mono->count -= 200.0;
+    double pre_mono = mono->count;
+    necron.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(mono->count > pre_mono);
+
+    // Phase-out alert when below 25%
+    for (auto& u : friendly.units) {
+        u.count = u.initial_count * 0.20;
+    }
+    necron.pre_combat_tick(friendly, enemy, sec, 1.0);
+    OMNIS_ASSERT(necron.phase_out_triggered);
+
+    std::cout << "       PASS: Reanimation Protocols, Living Metal hull repair, and Phase-Out alert verified.\n";
+}
+
+void test_tau_empire_mechanics() {
+    std::cout << "[TEST] 25. T'au Empire Markerlight Target Network & Tactical Stances..." << std::endl;
+    TauEmpireMechanic tau;
+    ArmyRoster friendly = ArmyRoster::create_tau_empire(1.0);
+    ArmyRoster enemy = ArmyRoster::create_tyranid_swarm(1.0);
+    Sector sec(1, "Tau Firebase", "SEC-TAU", "Redoubt", 40000.0, 0.45, 1e7);
+
+    // Initial Mont'ka early blitz bonus (<= 90s)
+    OMNIS_ASSERT(tau.current_stance == TauStance::MONTKA);
+    DamagePacket pkt{ 1000.0, 0.0, 1.0, false };
+    tau.modify_outgoing_damage(friendly, pkt, 1.0);
+    OMNIS_ASSERT(pkt.raw_damage >= 1350.0);
+    OMNIS_ASSERT(pkt.armor_penetration >= 0.10);
+
+    // Shield drone mitigation (18%)
+    double incoming = 10000.0;
+    double mitigated = tau.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(std::abs(mitigated - 8200.0) < 1e-3);
+    OMNIS_ASSERT(tau.shield_drone_damage_absorbed >= 1800.0);
+
+    // Markerlight saturation progression
+    tau.add_markerlight_tokens(8.0); // reach 10 tokens
+    OMNIS_ASSERT(tau.markerlight_tokens >= 9.0);
+    DamagePacket ml_pkt{ 1000.0, 0.0, 1.0, false };
+    tau.modify_outgoing_damage(friendly, ml_pkt, 1.0);
+    OMNIS_ASSERT(ml_pkt.raw_damage > 1700.0); // Mont'ka + Tier 3 Seeker guidance
+    OMNIS_ASSERT(ml_pkt.armor_penetration >= 0.35);
+    OMNIS_ASSERT(ml_pkt.ignores_cover);
+
+    // Switch to Kauyon (Patient Hunter)
+    tau.set_stance(TauStance::KAUYON);
+    tau.stance_elapsed_time = 40.0; // 40s into Kauyon (+20% sustained fire)
+    DamagePacket kau_pkt{ 1000.0, 0.0, 1.0, false };
+    tau.modify_outgoing_damage(friendly, kau_pkt, 1.0);
+    OMNIS_ASSERT(kau_pkt.raw_damage >= 1500.0);
+
+    std::cout << "       PASS: Markerlight tokens, Mont'ka/Kauyon stances, and Shield Drones verified.\n";
+}
+
+void test_custodes_martial_kata() {
+    std::cout << "[TEST] 26. Adeptus Custodes Martial Ka'tah & Auric Armor Aegis..." << std::endl;
+    CustodesMechanic custodes;
+    ArmyRoster friendly = ArmyRoster::create_custodes_vanguard(1.0);
+    ArmyRoster enemy = ArmyRoster::create_tyranid_swarm(1.0);
+    Sector sec(1, "Imperial Palace Gate", "SEC-PALACE", "Sanctum", 10000.0, 0.80, 1e8);
+
+    // Dacatarai stance: anti-horde cleave (+40% DPS)
+    custodes.set_kata_stance(KataStance::DACATARAI);
+    DamagePacket daca_pkt{ 1000.0, 0.0, 1.0, false };
+    custodes.modify_outgoing_damage(friendly, daca_pkt, 1.0);
+    OMNIS_ASSERT(std::abs(daca_pkt.raw_damage - 1400.0) < 1e-3);
+
+    // Rendax stance: monster/titan slayer (+25% DPS, +0.25 AP)
+    custodes.set_kata_stance(KataStance::RENDAX);
+    DamagePacket rend_pkt{ 1000.0, 0.0, 1.0, false };
+    custodes.modify_outgoing_damage(friendly, rend_pkt, 1.0);
+    OMNIS_ASSERT(std::abs(rend_pkt.raw_damage - 1250.0) < 1e-3);
+    OMNIS_ASSERT(rend_pkt.armor_penetration >= 0.25);
+
+    // Auric Armor 2+/4++ Aegis: 35% flat mitigation
+    double incoming = 10000.0;
+    double mitigated = custodes.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(std::abs(mitigated - 6500.0) < 1e-3);
+
+    // Kaptaris stance: parry blades add extra mitigation
+    custodes.set_kata_stance(KataStance::KAPTARIS);
+    double kapt_mit = custodes.apply_incoming_mitigation(friendly, incoming, 1.0);
+    OMNIS_ASSERT(kapt_mit < 5000.0);
+
+    std::cout << "       PASS: Martial Ka'tah stances, Auric Armor Aegis, and Kaptaris parry verified.\n";
+}
+
+void test_faction_command_doctrines() {
+    std::cout << "[TEST] 27. Modular Faction-Specific Tactical Command Doctrines..." << std::endl;
+    CommandOrders orders;
+
+    // Default: Imperium
+    OMNIS_ASSERT(orders.doctrines[0].name == "IGNITE PROMETHIUM MOAT");
+    OMNIS_ASSERT(orders.doctrines[1].name == "TITAN PLASMA VOLLEY");
+
+    // Configure for Orks
+    orders.configure_for_faction("orks");
+    OMNIS_ASSERT(orders.doctrines[0].name == "DA BIG WAAAGH! ROAR");
+    OMNIS_ASSERT(orders.doctrines[1].name == "ROKKS FROM DA SKY");
+    OMNIS_ASSERT(orders.doctrines[2].name == "GREEN TIDE MOB CALL");
+    OMNIS_ASSERT(orders.doctrines[4].name == "DAKKA BURST STORM");
+
+    // Configure for Necrons
+    orders.configure_for_faction("necrons");
+    OMNIS_ASSERT(orders.doctrines[0].name == "REANIMATION OVERCHARGE");
+    OMNIS_ASSERT(orders.doctrines[1].name == "DOOMSDAY ARKANITE BEAM");
+    OMNIS_ASSERT(orders.doctrines[2].name == "ETERNITY GATE INGRESS");
+
+    // Configure for T'au
+    orders.configure_for_faction("tau");
+    OMNIS_ASSERT(orders.doctrines[0].name == "MARKERLIGHT SATURATION");
+    OMNIS_ASSERT(orders.doctrines[1].name == "SEEKER MISSILE VOLLEY");
+
+    // Configure for Death Guard
+    orders.configure_for_faction("death_guard");
+    OMNIS_ASSERT(orders.doctrines[0].name == "MIASMA OF PESTILENCE");
+    OMNIS_ASSERT(orders.doctrines[1].name == "PLAGUEBURST PHOSPHEX BARRAGE");
+
+    // Execution test: Ork WAAAGH! Roar
+    {
+        orders.configure_for_faction("orks");
+        ArmyRoster orks = ArmyRoster::create_ork_waaagh(1.0);
+        ArmyRoster tyranids = ArmyRoster::create_tyranid_swarm(1.0);
+        SectorGraph graph = SectorGraph::create_standard_planetary_graph();
+        LogisticsSystem log;
+        SynapseNetwork syn;
+
+        double prev_tyranid_count = tyranids.get_total_count();
+        bool ok = orders.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT, orks, tyranids, graph, log, syn);
+        OMNIS_ASSERT(ok);
+        OMNIS_ASSERT(tyranids.get_total_count() < prev_tyranid_count);
+    }
+
+    std::cout << "       PASS: Dynamic faction doctrine configuration and tactical execution verified.\n";
+}
+
+void test_config_loader_json() {
+    std::cout << "[TEST] 28. Zero-Dependency JSON Config Customizer Loader & Exporter..." << std::endl;
+    SimulationEngine sim;
+    std::string test_path = "bin/test_custom_config.json";
+
+    // Export current state
+    bool saved = ConfigLoader::save_simulation_config(test_path, sim);
+    OMNIS_ASSERT(saved);
+
+    // Modify file or verify loader
+    SimulationEngine sim2;
+    sim2.set_defender_faction("orks");
+    sim2.set_speed(10.0);
+
+    bool loaded = ConfigLoader::load_simulation_config(test_path, sim2);
+    OMNIS_ASSERT(loaded);
+    OMNIS_ASSERT(sim2.defenders.faction_id == "imperium");
+    OMNIS_ASSERT(sim2.attackers.faction_id == "tyranids");
+
+    // Test token extractors
+    std::string sample = "{\"name\": \"Ghazghkull\", \"count\": 45000000, \"ratio\": 0.85}";
+    std::string str_val;
+    double num_val = 0.0;
+    int int_val = 0;
+
+    OMNIS_ASSERT(ConfigLoader::extract_json_string(sample, "name", str_val));
+    OMNIS_ASSERT(str_val == "Ghazghkull");
+    OMNIS_ASSERT(ConfigLoader::extract_json_number(sample, "ratio", num_val));
+    OMNIS_ASSERT(std::abs(num_val - 0.85) < 1e-4);
+    OMNIS_ASSERT(ConfigLoader::extract_json_int(sample, "count", int_val));
+    OMNIS_ASSERT(int_val == 45000000);
+
+    std::cout << "       PASS: JSON serialization, parsing, and simulation config load verified.\n";
+}
+
+void test_advanced_faction_command_doctrines() {
+    std::cout << "[TEST] 29. Full-Spectrum Faction Command Doctrines & State Coupling..." << std::endl;
+    SectorGraph graph = SectorGraph::create_standard_planetary_graph();
+    LogisticsSystem empty_logistics;
+    empty_logistics.promethium_liters = 0.0; // Zero promethium to ensure non-Imperial factions don't erroneously depend on fuel!
+    SynapseNetwork syn;
+
+    // 1. T'au Empire F1: Markerlight Saturation
+    {
+        SimulationEngine sim;
+        sim.set_defender_faction("tau");
+        sim.logistics.promethium_liters = 0.0;
+        auto* tau_mech = dynamic_cast<TauEmpireMechanic*>(sim.defender_rules.get());
+        OMNIS_ASSERT(tau_mech != nullptr);
+        double pre_ml = tau_mech->markerlight_tokens;
+
+        bool ok = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+        OMNIS_ASSERT(ok); // Must succeed even with 0 promethium!
+        OMNIS_ASSERT(tau_mech->markerlight_tokens >= pre_ml + 5.0);
+    }
+
+    // 2. World Eaters F1: Blood for the Blood God
+    {
+        SimulationEngine sim;
+        sim.set_defender_faction("world_eaters");
+        sim.logistics.promethium_liters = 0.0;
+        auto* we_mech = dynamic_cast<WorldEatersMechanic*>(sim.defender_rules.get());
+        OMNIS_ASSERT(we_mech != nullptr);
+        double pre_tithe = we_mech->blood_tithe_points;
+
+        bool ok = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+        OMNIS_ASSERT(ok);
+        OMNIS_ASSERT(we_mech->blood_tithe_points >= pre_tithe + 25.0);
+    }
+
+    // 3. Adepta Sororitas F1: Act of Faith Divine Aegis
+    {
+        SimulationEngine sim;
+        sim.set_defender_faction("sororitas");
+        sim.logistics.promethium_liters = 0.0;
+        auto* sor_mech = dynamic_cast<SororitasMechanic*>(sim.defender_rules.get());
+        OMNIS_ASSERT(sor_mech != nullptr);
+        double pre_miracle = sor_mech->miracle_points;
+
+        bool ok = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+        OMNIS_ASSERT(ok);
+        OMNIS_ASSERT(sor_mech->miracle_points >= pre_miracle + 20.0);
+    }
+
+    // 4. Adeptus Custodes F1 & F3: Phalanx & Allarus Teleport Ingress
+    {
+        SimulationEngine sim;
+        sim.set_defender_faction("custodes");
+        sim.logistics.promethium_liters = 0.0;
+        auto* cust_mech = dynamic_cast<CustodesMechanic*>(sim.defender_rules.get());
+        OMNIS_ASSERT(cust_mech != nullptr);
+
+        bool ok1 = sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
+        OMNIS_ASSERT(ok1);
+        OMNIS_ASSERT(cust_mech->active_kata == KataStance::KAPTARIS);
+
+        // F3 Allarus reinforcement
+        UnitClass* allarus = sim.defenders.find_unit("allarus_terminator");
+        OMNIS_ASSERT(allarus != nullptr);
+        allarus->count -= 500.0; // Simulate loss
+        double count_pre = allarus->count;
+
+        bool ok3 = sim.trigger_doctrine(DoctrineType::ASTARTES_DROP_POD);
+        OMNIS_ASSERT(ok3);
+        OMNIS_ASSERT(allarus->count > count_pre);
+    }
+
+    // 5. Necron Reanimation Pool Preservation
+    {
+        NecronDynastyMechanic necron;
+        ArmyRoster friendly = ArmyRoster::create_necron_dynasty(1.0);
+        ArmyRoster enemy = ArmyRoster::create_imperial_defense(1.0);
+        Sector sec(1, "Tomb", "SEC-T", "Vault", 20000.0, 0.5, 1e7);
+
+        // Friendly units are currently at 100% full capacity
+        CasualtyEvent cas{ 10000.0, 240000.0, "infantry", true };
+        necron.on_casualty_event(friendly, enemy, cas);
+        double pool_initial = necron.pending_reanimation_pool;
+        OMNIS_ASSERT(pool_initial > 0.0);
+
+        // Reanimation tick runs while units are already at max initial count
+        necron.pre_combat_tick(friendly, enemy, sec, 1.0);
+        // Excess pool must NOT be discarded
+        OMNIS_ASSERT(necron.pending_reanimation_pool == pool_initial);
+    }
+
+    std::cout << "       PASS: Cross-faction command doctrines and reanimation pool preservation verified.\n";
+}
+
+void test_config_loader_edge_cases_and_robustness() {
+    std::cout << "[TEST] 30. ConfigLoader Edge Cases, Type Safety, and Projection Recalculation..." << std::endl;
+
+    // 1. Type Safety: extract_json_string on numeric field must NOT match next string
+    std::string sample = "{\"count\": 1250000, \"next_key\": \"hello_world\"}";
+    std::string str_out;
+    bool matched_str = ConfigLoader::extract_json_string(sample, "count", str_out);
+    OMNIS_ASSERT(!matched_str); // Must return false, not "next_key"!
+
+    // 2. Type Safety: extract_json_number on string value like "1st Legion" must NOT return 1.0
+    std::string sample2 = "{\"title\": \"1st Cadian Regiment\", \"score\": 98.5}";
+    double num_out = 0.0;
+    bool matched_num = ConfigLoader::extract_json_number(sample2, "title", num_out);
+    OMNIS_ASSERT(!matched_num); // Must return false!
+
+    // Correct extraction of numeric field
+    bool matched_score = ConfigLoader::extract_json_number(sample2, "score", num_out);
+    OMNIS_ASSERT(matched_score);
+    OMNIS_ASSERT(std::abs(num_out - 98.5) < 1e-4);
+
+    // 3. Graceful handling of malformed JSON
+    SimulationEngine sim;
+    OMNIS_ASSERT(!ConfigLoader::load_simulation_config("non_existent_directory/invalid.json", sim));
+
+    // 4. Projection Recalculation verification on config load
+    std::string tmp_config = "bin/test_robust_config.json";
+    SimulationEngine sim_baseline;
+    sim_baseline.set_defender_faction("imperium");
+    ConfigLoader::save_simulation_config(tmp_config, sim_baseline);
+
+    SimulationEngine sim_loaded;
+    bool ok_load = ConfigLoader::load_simulation_config(tmp_config, sim_loaded);
+    OMNIS_ASSERT(ok_load);
+    OMNIS_ASSERT(sim_loaded.cached_projection.iterations_run == 20);
+
+    std::cout << "       PASS: JSON type safety, error boundaries, and projection recalculation verified.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -640,9 +1020,17 @@ int main() {
     test_sororitas_miracle_dice();
     test_world_eaters_blood_tithe();
     test_cross_faction_lanchester_matrix();
+    test_ork_waaagh_mechanics();
+    test_necron_dynasty_mechanics();
+    test_tau_empire_mechanics();
+    test_custodes_martial_kata();
+    test_faction_command_doctrines();
+    test_config_loader_json();
+    test_advanced_faction_command_doctrines();
+    test_config_loader_edge_cases_and_robustness();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 22 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 30 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
