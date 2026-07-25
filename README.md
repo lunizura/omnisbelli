@@ -85,34 +85,78 @@ $$\text{Synapse Integrity } \sigma = \frac{\sum \text{Living Synapse Creatures} 
 
 ---
 
-## 4. Tactical Command Doctrines
+## 4. Modular Faction Signature Mechanics
 
-- `[F1] IGNITE PROMETHIUM MOAT`: Floods sector trench with burning promethium fuel. Incinerates 2,500,000 swarm gaunts and sets back sector breach by 12%. Costs 15,000L fuel. (30s cooldown).
-- `[F2] TITAN PLASMA VOLLEY`: Overcharges Warhound/Reaver Titan plasma destructors. Vaporizes 3,500 Carnifexes and 120 Bio-Titans. Generates +35% reactor heat. (45s cooldown).
-- `[F3] SPACE MARINE DROP-POD SPEARHEAD`: Surgical Astartes decapitation strike targeting high-value Synapse nodes. Eliminates 15,000 Tyranid Warriors and 1,800 Zoanthropes, triggering instantaneous synaptic disruption. (60s cooldown).
-- `[F4] ORDER TACTICAL FALLBACK`: Orders orderly withdrawal to the next defense line. Concedes the current sector but preserves 100% of surviving defenders from encirclement. (15s cooldown).
-- `[F5] ORBITAL LANCE BATTERY`: Imperial Navy lance bombardment from high orbit. Incinerates 8,000,000 swarm organisms with collateral danger to friendly frontline. (90s cooldown).
-- `[F8] EXTERMINATUS PROTOCOL`: Planetary cleansing via two-stage cyclonic torpedoes. Cleanses the entire planet in thermonuclear fire, denying biomass to the Hive Mind. *Unlockable once Bastion falls or Spire is under siege.*
+Omnisbelli features a pluggable `IFactionRuleModule` architecture simulating the signature mathematical combat laws of 9 major Warhammer 40,000 factions:
+
+1. **Tyranid Hive Mind (`TyranidSynapseModule`)**:
+   - Synapse network integrity $\sigma$ dynamically scales attack lethality and cohesion. Synapse disruption induces feral panic (+100% casualties, 0.2% cannibalistic infighting).
+2. **Death Guard Vectorium (`DeathGuardMechanic`)**:
+   - *Disgustingly Resilient*: 33.3% Feel No Pain (FNP) post-armor damage cancellation.
+   - *Nurgle's Contagion Decay*: Radiating rot corrodes fortification cover and armor saves over time.
+   - *Poxwalker Recursion*: Fallen frontline infantry rise as infectious plague thralls.
+3. **Adepta Sororitas (`SororitasMechanic`)**:
+   - *Acts of Faith & Miracle Dice*: Friendly martyrdom generates Miracle Points.
+   - *Shield of Faith*: 4++ invulnerability field absorbing 50% of incoming damage.
+   - *Holy Trinity*: Multi-melta, flamer, and bolter purity grant +35% damage and +0.15 AP.
+4. **Adeptus Mechanicus (`MechanicusMechanic`)**:
+   - *Canticles of the Omnissiah*: 4 binharic operational protocols cycling dynamically.
+   - *Rad-Saturation*: High-yield radioactive bombardment deteriorating enemy bio-constructs.
+5. **World Eaters (`WorldEatersMechanic`)**:
+   - *Blood Tithe of Khorne*: 4 escalating tiers fueled by battlefield slaughter (+35% melee DPS, +0.15 AP).
+   - *Spiteful Demise*: Fallen Berserkers explode into retaliatory counter-damage.
+   - *Bloodthirster Apotheosis*: Greater Daemons summoned directly onto the frontline.
+6. **Ork WAAAGH! (`OrkWaaaghMechanic`)**:
+   - *WAAAGH! Momentum Curve*: Combat casualties and prolonged melee drive psychic momentum up to 100%, triggering a ferocious +40% melee DPS and charge AP surge.
+   - *Dakkadakka Burst Hits*: Exploding hits provide +20% sustained burst damage and armor shred.
+   - *Grot Shields*: Gretchin meatshields absorb 20% incoming anti-armor fire, shielding high-value Nobz and Gargants.
+7. **Necron Dynasty (`NecronDynastyMechanic`)**:
+   - *Reanimation Protocols*: 20% of fallen Necron warriors reconstitute each combat tick.
+   - *Living Metal Hull Regeneration*: Monoliths and vehicles self-repair structural breaches and hull integrity.
+   - *Phase-Out Protocol*: Emergency tomb world teleportation triggers when army falls below 25%.
+8. **T'au Empire (`TauEmpireMechanic`)**:
+   - *Markerlight Target Network*: Up to 10 markerlight tokens designating targets, negating enemy cover and granting +0.25 AP and seeker missile guidance (+30% DPS).
+   - *Mont'ka vs. Kauyon*: Choose between Mont'ka (+35% early blitz DPS) and Kauyon (+40% sustained late-game fire).
+   - *Shield Drone Interception*: Force field drones absorb 18% of incoming heavy anti-armor damage.
+9. **Adeptus Custodes (`CustodesMechanic`)**:
+   - *Martial Ka'tah Stances*: Cycles Dacatarai (anti-horde +40% DPS), Rendax (monster/titan slayer +25% DPS, +0.25 AP), and Kaptaris (parry defense).
+   - *Auric Armor 2+/4++ Aegis*: 35% flat damage mitigation plus psychic immunity.
 
 ---
 
-## 5. User-Pluggable Roster & Scenario Presets
+## 5. Modular Tactical Command Doctrines (`[F1]` - `[F8]`)
 
-Press `[4]` to enter the **Interactive Roster Customizer**:
-- Use `[UP/DOWN]` to select any military formation.
-- Use `[LEFT/RIGHT]` to scale counts dynamically (`x0.5` or `x2.0`).
-- Use `[TAB]` to switch between Defenders and Invaders.
-
-### Built-in Scenario Presets (Keys `[1]` to `[5]` in Customizer):
-1. **Fall of Tyran**: 1,978,020 Imperium vs 100,000,020 Hive Fleet Leviathan Swarm.
-2. **Macragge Polar Fortress**: 4,000,000 Ultramar Defenders vs 250,000,000 Tyranids.
-3. **Krieg 88th Siege Army**: 10,000,000 Death Korps vs 50,000,000 Tyranids.
-4. **Third War for Armageddon**: 3,000,000 Imperium vs 90,000,000 Ork WAAAGH! (Boyz, Nobz, Battlewagons, Gargants).
-5. **Tomb World Awakening**: 2,000,000 Imperium vs 35,000,000 Necron Dynasty (Gauss Warriors, Immortals, Monoliths).
+Doctrines dynamically configure based on the active defender faction:
+- **Imperium**: Promethium Moat, Titan Plasma Volley, Astartes Drop-Pods, Tactical Retreat, Orbital Lance, Exterminatus.
+- **Orks**: Da Big WAAAGH! Roar, Rokks From Da Sky, Green Tide Mob Call, Tactical Brawl Reposition, Dakka Burst Storm, Gargant Belly Gun Purge.
+- **Necrons**: Reanimation Overcharge, Doomsday Arkanite Beam, Eternity Gate Ingress, Dimensional Dispersal, Solar Pulse Flare, Celestial Orrery Purge.
+- **T'au Empire**: Markerlight Saturation, Seeker Missile Volley, Crisis Battlesuit Manta Drop, Kauyon Feigned Retreat, Tiger Shark Rail Barrage, Ion Core Overload.
+- **Death Guard**: Miasma of Pestilence, Plagueburst Phosphex Barrage, Deathshroud Teleport, Slime-Trail Withdrawal, Rotting Corpse Cannonade, Life-Eater Virus.
+- **World Eaters**: Blood for the Blood God, Lord of Skulls Cannonade, Red Butcher Assault Drop, Bloody Tactical Feint, Brass Meteor Strike, Skull Throne Apotheosis.
+- **Adepta Sororitas**: Divine Aegis, Exorcist Pipe Organ Volley, Seraphim Descent, Sacred Martyrs Retreat, Retributor Holy Fire, Living Saint Divine Wrath.
+- **Adeptus Mechanicus**: Binharic Canticle Override, Ordinatus Volcano Beam, Cybernetica Pulse, Calculated Logical Retreat, Rad-Bomb Saturation, Omnissiah Data-Purge.
+- **Adeptus Custodes**: Martial Ka'tah Embolus, Telemon Storm Cannon, Allarus Ingress, Strategic Retrograde, Sagittarum Auric Volley, Talon Vault Forbidden Scourge.
 
 ---
 
-## 6. Controls
+## 6. External JSON Configuration Loader (`data/siege_config.json`)
+
+Omnisbelli includes a zero-dependency JSON config loader (`ConfigLoader`) allowing users to adjust army rosters, statistics, and simulation parameters from disk without recompiling:
+```json
+{
+  "defender_faction": "imperium",
+  "attacker_faction": "tyranids",
+  "time_multiplier": 5.0,
+  "active_sector_index": 0,
+  "units": [
+    { "id": "cadian_infantry", "count": 1250000, "hp": 18.0, "armor": 0.20, "dps": 3.8 }
+  ]
+}
+```
+
+---
+
+## 7. Controls
 
 | Key | Action |
 |:---|:---|
@@ -121,18 +165,21 @@ Press `[4]` to enter the **Interactive Roster Customizer**:
 | `[3]` | Switch to **Strategic Logistics** (Munitions stockpiles, burn rates, reactor heat) |
 | `[4]` | Switch to **Unit Customizer** (Edit unit counts, plug custom armies) |
 | `[5]` | Switch to **Monte Carlo Projections** (Win/Stalemate/Defeat probabilities) |
+| `[F]` | Cycle Defender Faction (Imperium, Death Guard, Sororitas, Mechanicus, World Eaters, Custodes, Tau, Orks, Necrons) |
+| `[G]` | Cycle Attacker Faction (Tyranids, Death Guard, World Eaters, Sororitas, Mechanicus, Orks, Necrons, Tau) |
+| `[L]` | Cycle Planetary Campaign Scenario Presets (1 to 10) |
 | `[SPACE]` | Pause / Resume Simulation |
 | `[P]` | Cycle Phosphor Palette (Mechanicus Green, Amber, Slate, Cyber Cyan) |
 | `[C]` | Toggle CRT Scanline Rasterizer Effect |
 | `[` / `]` | Decrease / Increase Simulation Speed (0.5x, 1x, 5x, 20x, 100x) |
 | `[M]` | Trigger 40-Iteration Monte Carlo Differential Calculation |
 | `[R]` | Reset Simulation to Day 0 |
-| `[F1 - F8]`| Engage Tactical Command Doctrines |
+| `[F1 - F8]`| Engage Faction-Specific Tactical Command Doctrines |
 | `[ESC]` | Exit Cogitator |
 
 ---
 
-## 7. Compilation & Verification
+## 8. Compilation & Verification
 
 ### Build with Instant Batch Script (MSVC x64)
 ```cmd
@@ -144,7 +191,7 @@ Produces `bin\omnisbelli.exe` and `bin\test_simulation.exe`.
 ```cmd
 test.bat
 ```
-Verifies all 8 simulation test suites (Lanchester square vs linear laws, Synapse disruption, munitions depletion, sector fallback cascades, Monte Carlo forecasting, and modular rosters).
+Verifies all 30 simulation test suites (Lanchester square vs linear laws, Synapse disruption, munitions depletion, sector fallback cascades, Monte Carlo forecasting, FNP & Contagion decay, Canticles, Miracle Dice, Blood Tithe, Ork WAAAGH! & Dakkadakka, Necron Reanimation & Living Metal, T'au Markerlights & Stances, Custodes Ka'tah, Faction Command Doctrines, JSON Config Customizer, and cross-faction doctrine coupling).
 
 ### Run Application
 ```cmd
