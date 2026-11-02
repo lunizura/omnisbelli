@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
 
 namespace omnisbelli {
 
@@ -12,6 +13,11 @@ bool TelemetryExport::export_battle_json(const std::string& filepath,
                                          const LogisticsSystem& log,
                                          double elapsed_time_seconds,
                                          const std::string& outcome) {
+    std::error_code ec;
+    std::filesystem::path p(filepath);
+    if (p.has_parent_path()) {
+        std::filesystem::create_directories(p.parent_path(), ec);
+    }
     std::ofstream f(filepath);
     if (!f.is_open()) return false;
 
@@ -51,6 +57,11 @@ bool TelemetryExport::export_forensic_log(const std::string& filepath,
                                           const LogisticsSystem& log,
                                           double elapsed_time_seconds,
                                           const std::string& outcome) {
+    std::error_code ec;
+    std::filesystem::path p(filepath);
+    if (p.has_parent_path()) {
+        std::filesystem::create_directories(p.parent_path(), ec);
+    }
     std::ofstream f(filepath);
     if (!f.is_open()) return false;
 

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 
 namespace omnisbelli {
 
@@ -192,6 +193,11 @@ bool ConfigLoader::load_simulation_config(const std::string& filepath, Simulatio
 }
 
 bool ConfigLoader::save_simulation_config(const std::string& filepath, const SimulationEngine& sim) {
+    std::error_code ec;
+    std::filesystem::path p(filepath);
+    if (p.has_parent_path()) {
+        std::filesystem::create_directories(p.parent_path(), ec);
+    }
     std::ofstream file(filepath);
     if (!file.is_open()) return false;
 
