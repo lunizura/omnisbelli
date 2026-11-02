@@ -1,0 +1,27 @@
+name: Omnisbelli C++20 CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & Test (CMake MSVC C++20)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Omnisbelli & Test Suite
+        run: cmake --build build --config Release
+
+      - name: Run Simulation Test Suite
+        working-directory: build
+        run: ctest -C Release --output-on-failure
