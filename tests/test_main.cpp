@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <string>
 #include <cstdlib>
@@ -993,6 +994,155 @@ void test_config_loader_edge_cases_and_robustness() {
     std::cout << "       PASS: JSON type safety, error boundaries, and projection recalculation verified.\n";
 }
 
+void test_monte_carlo_multi_faction_and_reset_state_conservation() {
+    std::cout << "[TEST] 31. Multi-Faction Monte Carlo & State Conservation Across Resets..." << std::endl;
+
+    // 1. Sector initial fortification cover conservation
+    Sector sec(1, "Test Sector", "SEC-01", "Zone", 50000.0, 0.45, 5e6);
+    OMNIS_ASSERT(std::abs(sec.fortification_cover - 0.45) < 1e-4);
+    OMNIS_ASSERT(std::abs(sec.initial_fortification_cover - 0.45) < 1e-4);
+    sec.fortification_cover = 0.10;
+    sec.reset();
+    OMNIS_ASSERT(std::abs(sec.fortification_cover - 0.45) < 1e-4);
+
+    // 2. UnitClass initial hp per unit conservation
+    UnitClass u("inf", "Infantry", "imperium", UnitCategory::INFANTRY, 1000.0, 15.0, 0.2, 1.0, 1.0, 1.0, 0.0, TargetPriority::PRIORITY_BALANCED);
+    OMNIS_ASSERT(std::abs(u.hp_per_unit - 15.0) < 1e-4);
+    OMNIS_ASSERT(std::abs(u.initial_hp_per_unit - 15.0) < 1e-4);
+    u.hp_per_unit = 50.0;
+    u.reset();
+    OMNIS_ASSERT(std::abs(u.hp_per_unit - 15.0) < 1e-4);
+
+    // 3. Multi-Faction Monte Carlo Projections (Tau defender vs Death Guard attacker)
+    SimulationEngine sim;
+    sim.set_defender_faction("tau");
+    sim.set_attacker_faction("death_guard");
+    PlanetaryProjection proj = ProjectionEngine::run_monte_carlo(sim.defenders, sim.attackers, sim.sector_graph, sim.logistics, 10);
+    OMNIS_ASSERT(proj.iterations_run == 10);
+    double total_pct = proj.win_percentage + proj.stalemate_percentage + proj.defeat_percentage;
+    OMNIS_ASSERT(std::abs(total_pct - 100.0) < 1e-2);
+
+    std::cout << "       PASS: Sector/unit reset conservation and multi-faction Monte Carlo projections verified.\n";
+}
+
+void test_tau_markerlights_cover_bypass_and_world_eaters_demise() {
+    std::cout << "[TEST] 32. Tau Markerlights Ignores-Cover & World Eaters Proportional Demise..." << std::endl;
+
+    // 1. Tau Markerlights ignores_cover in Lanchester combat
+    {
+        ArmyRoster def1 = ArmyRoster::create_imperial_defense(1.0);
+        ArmyRoster att1 = ArmyRoster::create_tau_empire(1.0);
+        Sector sec1(1, "Fortress", "SEC-01", "Bastion", 100000.0, 0.85, 1e7);
+        LogisticsSystem log1;
+        TauEmpireMechanic tau_no_ml;
+        tau_no_ml.markerlight_tokens = 0.0; // ignores_cover == false
+        CombatStepTelemetry tel1;
+        auto def_rules1 = create_faction_rule_module("imperium");
+        LanchesterCombat::compute_combat_tick(def1, att1, sec1, log1, *def_rules1, tau_no_ml, 1.0, tel1);
+
+        ArmyRoster def2 = ArmyRoster::create_imperial_defense(1.0);
+        ArmyRoster att2 = ArmyRoster::create_tau_empire(1.0);
+        Sector sec2(1, "Fortress", "SEC-01", "Bastion", 100000.0, 0.85, 1e7);
+        LogisticsSystem log2;
+        TauEmpireMechanic tau_with_ml;
+        tau_with_ml.markerlight_tokens = 8.0; // Tier 2 markerlights: ignores_cover == true
+        CombatStepTelemetry tel2;
+        auto def_rules2 = create_faction_rule_module("imperium");
+        LanchesterCombat::compute_combat_tick(def2, att2, sec2, log2, *def_rules2, tau_with_ml, 1.0, tel2);
+
+        OMNIS_ASSERT(tel2.defender_casualties_step > tel1.defender_casualties_step);
+    }
+
+    // 2. World Eaters Spiteful Demise proportional distribution
+    {
+        WorldEatersMechanic we;
+        we.tithe_tier = 1;
+        ArmyRoster we_att = ArmyRoster::create_world_eaters(1.0);
+        ArmyRoster imp_def = ArmyRoster::create_imperial_defense(1.0);
+
+        UnitClass* cad = imp_def.find_unit("cadian_infantry");
+        UnitClass* pdf = imp_def.find_unit("pdf_conscript");
+        OMNIS_ASSERT(cad != nullptr && pdf != nullptr);
+        double cad_hp_pre = cad->get_total_hp();
+        double pdf_hp_pre = pdf->get_total_hp();
+
+        CasualtyEvent cas{ 50000.0, 500000.0, "infantry", true };
+        we.on_casualty_event(we_att, imp_def, cas);
+
+        // Both living frontline units must take damage proportionally (no single-target break)
+        OMNIS_ASSERT(cad->get_total_hp() < cad_hp_pre);
+        OMNIS_ASSERT(pdf->get_total_hp() < pdf_hp_pre);
+    }
+
+    std::cout << "       PASS: Markerlight cover bypass and World Eaters proportional demise verified.\n";
+}
+
+void test_ork_grot_shields_and_death_guard_defense_preservation() {
+    std::cout << "[TEST] 33. Ork Grot Shields Mitigation & Death Guard Defensive Cover Preservation..." << std::endl;
+
+    // 1. Ork Grot Shields: damage deducted from living grots
+    {
+        ArmyRoster orks = ArmyRoster::create_ork_waaagh(1.0);
+        UnitClass* grots = orks.find_unit("grots");
+        OMNIS_ASSERT(grots != nullptr);
+        OMNIS_ASSERT(grots->count == 15000000.0);
+        double grot_hp_pre = grots->get_total_hp();
+
+        OrkWaaaghMechanic ork_mech;
+        double mit_dmg = ork_mech.apply_incoming_mitigation(orks, 100000.0, 1.0);
+        OMNIS_ASSERT(mit_dmg < 100000.0);
+        OMNIS_ASSERT(grots->get_total_hp() < grot_hp_pre);
+
+        // When Grots are dead, Grot Shields provides 0 mitigation (no infinite meatshield)
+        grots->count = 0.0;
+        double unmit_dmg = ork_mech.apply_incoming_mitigation(orks, 100000.0, 1.0);
+        OMNIS_ASSERT(std::abs(unmit_dmg - 100000.0) < 1e-4);
+    }
+
+    // 2. Death Guard defensive cover preservation:
+    // Defending: is_defender = true -> does NOT corrode cover
+    // Attacking: is_defender = false -> corrodes enemy cover
+    {
+        DeathGuardMechanic dg;
+        ArmyRoster dg_roster = ArmyRoster::create_death_guard(1.0);
+        ArmyRoster enemy_roster = ArmyRoster::create_imperial_defense(1.0);
+        Sector sec_def(1, "Plague Bastion", "SEC-01", "Zone", 50000.0, 0.60, 1e6);
+
+        dg.pre_combat_tick(dg_roster, enemy_roster, sec_def, 1.0, true);
+        OMNIS_ASSERT(std::abs(sec_def.fortification_cover - 0.60) < 1e-4);
+
+        Sector sec_att(2, "Enemy Bunker", "SEC-02", "Zone", 50000.0, 0.60, 1e6);
+        dg.pre_combat_tick(dg_roster, enemy_roster, sec_att, 1.0, false);
+        OMNIS_ASSERT(sec_att.fortification_cover < 0.60);
+    }
+
+    std::cout << "       PASS: Ork Grot shield absorption and Death Guard defensive cover preservation verified.\n";
+}
+
+void test_auto_telemetry_export_on_battle_resolution() {
+    std::cout << "[TEST] 34. Auto-Telemetry & Forensic Export On Battle Resolution..." << std::endl;
+    SimulationEngine sim;
+    sim.set_defender_faction("imperium");
+    sim.set_attacker_faction("tyranids");
+
+    // Clear defender forces to trigger battle defeat on next tick
+    sim.defenders.units.clear();
+    sim.update(1.0);
+    OMNIS_ASSERT(sim.outcome == SimulationOutcome::TYRANID_VICTORY);
+
+    std::ifstream json_file("bin/battle_telemetry.json");
+    OMNIS_ASSERT(json_file.good());
+    std::string json_content((std::istreambuf_iterator<char>(json_file)), std::istreambuf_iterator<char>());
+    OMNIS_ASSERT(!json_content.empty());
+
+    std::ifstream log_file("bin/battle_forensic.log");
+    OMNIS_ASSERT(log_file.good());
+    std::string log_content((std::istreambuf_iterator<char>(log_file)), std::istreambuf_iterator<char>());
+    OMNIS_ASSERT(!log_content.empty());
+
+    std::cout << "       PASS: Auto-telemetry JSON and forensic logs exported automatically upon battle defeat.\n";
+}
+
 int main() {
     std::cout << "=================================================================\n";
     std::cout << "  OMNISBELLI // AUTOMATED COMBAT ENGINE VERIFICATION SUITE       \n";
@@ -1028,9 +1178,13 @@ int main() {
     test_config_loader_json();
     test_advanced_faction_command_doctrines();
     test_config_loader_edge_cases_and_robustness();
+    test_monte_carlo_multi_faction_and_reset_state_conservation();
+    test_tau_markerlights_cover_bypass_and_world_eaters_demise();
+    test_ork_grot_shields_and_death_guard_defense_preservation();
+    test_auto_telemetry_export_on_battle_resolution();
 
     std::cout << "=================================================================\n";
-    std::cout << "  ALL 30 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
+    std::cout << "  ALL 34 SIMULATION ENGINE TEST SUITES PASSED FLAWLESSLY!        \n";
     std::cout << "=================================================================\n";
     return 0;
 }
