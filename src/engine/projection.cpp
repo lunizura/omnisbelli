@@ -1,6 +1,7 @@
 #include "engine/projection.hpp"
 #include "engine/lanchester.hpp"
 #include "engine/synapse_network.hpp"
+#include "engine/faction_rule_module.hpp"
 #include <random>
 #include <algorithm>
 
@@ -32,7 +33,9 @@ PlanetaryProjection ProjectionEngine::run_monte_carlo(
         ArmyRoster att = attackers_template;
         SectorGraph sec = sector_graph_template;
         LogisticsSystem log = logistics_template;
-        SynapseNetwork syn;
+        auto def_rules = create_faction_rule_module(def.faction_id);
+        auto att_rules = create_faction_rule_module(att.faction_id);
+        bool is_imperial_defender = (def.faction_id == "imperium" || def.faction_id == "krieg");
 
         double sim_time = 0.0;
         double dt = 60.0; // 60-second operational differential timestep
@@ -74,7 +77,7 @@ PlanetaryProjection ProjectionEngine::run_monte_carlo(
 
             // High Command Tactical Strikes in Monte Carlo:
             // When battle reaches Sector 3 or 4, simulate probability of surgical Astartes drop-pod spearhead
-            if (!decapitation_attempted && sim_time >= next_doctrine_check && sec.active_sector_index >= 2) {
+            if (is_imperial_defender && !decapitation_attempted && sim_time >= next_doctrine_check && sec.active_sector_index >= 2) {
                 decapitation_attempted = true;
                 if (decap_chance(rng) < 0.40) {
                     // Successful decapitation strike against Synapse nodes / commanders!
@@ -83,12 +86,15 @@ PlanetaryProjection ProjectionEngine::run_monte_carlo(
                             u.apply_direct_casualties(u.count * 0.45 + 500.0);
                         }
                     }
-                    syn.update(att, 0.1);
+                    auto* tyranid_module = dynamic_cast<TyranidSynapseModule*>(att_rules.get());
+                    if (tyranid_module) {
+                        tyranid_module->synapse.update(att, 0.1);
+                    }
                 }
             }
 
             // Occasional Promethium Moat defense when breach is high (>60%)
-            if (cur_sector.breach_percentage > 60.0 && log.can_afford_promethium(15000.0)) {
+            if (is_imperial_defender && cur_sector.breach_percentage > 60.0 && log.can_afford_promethium(15000.0)) {
                 log.consume_promethium(15000.0);
                 double restored = cur_sector.max_integrity * 0.12;
                 cur_sector.current_integrity = std::min(cur_sector.max_integrity, cur_sector.current_integrity + restored);
@@ -99,7 +105,7 @@ PlanetaryProjection ProjectionEngine::run_monte_carlo(
             double var = variance_dist(rng);
             double effective_dt = dt * var;
 
-            LanchesterCombat::compute_combat_tick(def, att, cur_sector, log, syn, effective_dt, tel);
+            LanchesterCombat::compute_combat_tick(def, att, cur_sector, log, *def_rules, *att_rules, effective_dt, tel);
             sim_time += effective_dt;
 
             // Early exit if attrition rate is negligible (stalemate)
