@@ -14,7 +14,7 @@ enum class TacticalGlyph {
     SHIELD,             // Void shield / armor
     WARNING_TRIANGLE,   // Alert indicator
     SWORD,              // Close combat
-    CHOKEPONT_ICON      // Funnel bottleneck
+    CHOKEPOINT_ICON     // Funnel bottleneck
 };
 
 class BitmapFont {

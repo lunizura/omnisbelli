@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
 
 if not exist bin mkdir bin
 
-set CXX_FLAGS=/std:c++17 /EHsc /O2 /W4 /utf-8 /DNOMINMAX /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude
+set CXX_FLAGS=/std:c++20 /EHsc /O2 /W4 /utf-8 /DNOMINMAX /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude
 set LIBS=user32.lib gdi32.lib
 
 echo [*] Compiling Engine and Test Suite...

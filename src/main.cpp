@@ -4,6 +4,7 @@
 #include "engine/simulation.hpp"
 #include "ui/ui_manager.hpp"
 #include "ui/input_handler.hpp"
+#include "gfx/audio_sfx.hpp"
 
 using namespace omnisbelli;
 
@@ -34,9 +35,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             PostQuitMessage(0);
             return 0;
         }
-        if (InputHandler::handle_key_down(wParam, g_simulation, g_ui)) {
-            InvalidateRect(hWnd, NULL, FALSE);
-        }
+        InputHandler::handle_key_down(wParam, g_simulation, g_ui);
         return 0;
 
     case WM_LBUTTONDOWN: {
@@ -50,9 +49,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         int vx, vy;
         g_framebuffer.screen_to_virtual(mouse_x, mouse_y, client_w, client_h, vx, vy);
-        if (InputHandler::handle_mouse_click(vx, vy, g_simulation, g_ui)) {
-            InvalidateRect(hWnd, NULL, FALSE);
-        }
+        InputHandler::handle_mouse_click(vx, vy, g_simulation, g_ui);
         return 0;
     }
 
@@ -162,6 +159,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
         Sleep(16);
     }
 
+    AudioSFX::shutdown();
     return static_cast<int>(msg.wParam);
 }
 

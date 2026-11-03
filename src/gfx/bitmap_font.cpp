@@ -221,7 +221,7 @@ void BitmapFont::draw_glyph(
     case TacticalGlyph::SHIELD:           rows = GLYPH_SHIELD; break;
     case TacticalGlyph::WARNING_TRIANGLE: rows = GLYPH_WARNING; break;
     case TacticalGlyph::SWORD:            rows = GLYPH_SWORD; break;
-    case TacticalGlyph::CHOKEPONT_ICON:   rows = GLYPH_CHOKEPOINT; break;
+    case TacticalGlyph::CHOKEPOINT_ICON:  rows = GLYPH_CHOKEPOINT; break;
     default:                              rows = GLYPH_CROSSHAIR; break;
     }
 
