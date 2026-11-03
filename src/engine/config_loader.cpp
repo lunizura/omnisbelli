@@ -171,6 +171,7 @@ bool ConfigLoader::load_simulation_config(const std::string& filepath, Simulatio
                         double hp = 0.0;
                         if (extract_json_number(obj_str, "hp", hp)) {
                             u->hp_per_unit = hp;
+                            u->initial_hp_per_unit = hp;
                         }
                         double armor = 0.0;
                         if (extract_json_number(obj_str, "armor", armor)) {

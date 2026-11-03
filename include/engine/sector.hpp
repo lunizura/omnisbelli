@@ -21,6 +21,7 @@ public:
 
     double chokepoint_width;        // Width in meters
     double fortification_cover;     // [0.0, 0.85] damage reduction for defenders
+    double initial_fortification_cover;
     double max_integrity;
     double current_integrity;
     double breach_percentage;       // [0.0, 100.0]%

@@ -7,7 +7,8 @@ namespace omnisbelli {
 Sector::Sector()
     : id(0), name("Unknown Sector"), designation("SEC-0"),
       description(""), chokepoint_width(10000.0),
-      fortification_cover(0.2), max_integrity(10000000.0),
+      fortification_cover(0.2), initial_fortification_cover(0.2),
+      max_integrity(10000000.0),
       current_integrity(10000000.0), breach_percentage(0.0),
       status(SectorStatus::SECURE) {}
 
@@ -24,6 +25,7 @@ Sector::Sector(
       description(description),
       chokepoint_width(std::max(100.0, chokepoint_width)),
       fortification_cover(std::clamp(fortification_cover, 0.0, 0.90)),
+      initial_fortification_cover(std::clamp(fortification_cover, 0.0, 0.90)),
       max_integrity(std::max(1000.0, max_integrity)),
       current_integrity(max_integrity),
       breach_percentage(0.0),
@@ -60,6 +62,7 @@ bool Sector::is_fallen() const {
 void Sector::reset() {
     current_integrity = max_integrity;
     breach_percentage = 0.0;
+    fortification_cover = initial_fortification_cover;
     status = SectorStatus::SECURE;
 }
 

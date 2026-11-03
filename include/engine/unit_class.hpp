@@ -38,6 +38,7 @@ public:
     double count;
     double initial_count;
     double hp_per_unit;
+    double initial_hp_per_unit;
     double armor;                       // Damage reduction [0.0, 0.90]
     double dps_per_unit;
     double splash_factor;               // Multiplier vs high-density swarms

@@ -7,7 +7,7 @@ namespace omnisbelli {
 UnitClass::UnitClass()
     : id(""), name("Unknown"), faction_id("neutral"),
       category(UnitCategory::INFANTRY),
-      count(0.0), initial_count(0.0), hp_per_unit(10.0),
+      count(0.0), initial_count(0.0), hp_per_unit(10.0), initial_hp_per_unit(10.0),
       armor(0.0), dps_per_unit(1.0), splash_factor(1.0),
       frontline_footprint(1.0), backline_ratio(0.0),
       target_priority(TargetPriority::PRIORITY_BALANCED),
@@ -35,7 +35,7 @@ UnitClass::UnitClass(
 )
     : id(id), name(name), faction_id(faction_id),
       category(category),
-      count(count), initial_count(count), hp_per_unit(hp_per_unit),
+      count(count), initial_count(count), hp_per_unit(hp_per_unit), initial_hp_per_unit(hp_per_unit),
       armor(std::clamp(armor, 0.0, 0.90)),
       dps_per_unit(dps_per_unit), splash_factor(std::max(1.0, splash_factor)),
       frontline_footprint(std::max(0.1, frontline_footprint)),
@@ -105,6 +105,7 @@ double UnitClass::get_survival_percentage() const {
 
 void UnitClass::reset() {
     count = initial_count;
+    hp_per_unit = initial_hp_per_unit;
     casualties_suffered = 0.0;
     total_damage_dealt = 0.0;
 }
