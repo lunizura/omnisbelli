@@ -25,8 +25,8 @@ void LanchesterCombat::compute_combat_tick(
 
     // 1. Update logistics and pre-combat faction module hooks
     logistics.update(dt);
-    defender_rules.pre_combat_tick(defenders, attackers, active_sector, dt);
-    attacker_rules.pre_combat_tick(attackers, defenders, active_sector, dt);
+    defender_rules.pre_combat_tick(defenders, attackers, active_sector, dt, true);
+    attacker_rules.pre_combat_tick(attackers, defenders, active_sector, dt, false);
 
     telemetry.synapse_ratio = attacker_rules.get_telemetry_ratio();
 
@@ -224,7 +224,7 @@ void LanchesterCombat::compute_combat_tick(
 
     // 7. Allocate Attacker Damage onto Defenders Behind Fortifications
     double breach_ratio = active_sector.breach_percentage / 100.0;
-    double cover = active_sector.fortification_cover;
+    double cover = att_packet.ignores_cover ? 0.0 : active_sector.fortification_cover;
     double exposure = 1.0;
     if (!active_sector.is_fallen()) {
         if (active_sector.designation == "SEC-ORBIT") {
