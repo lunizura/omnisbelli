@@ -666,7 +666,7 @@ void UIManager::render_footer_bar(PixelFramebuffer& fb, const SimulationEngine& 
     BitmapFont::draw_string(fb, 6, 326, latest_event, theme.alert_amber, 0, true, 1);
 
     // Keyboard Shortcuts Banner
-    std::string shortcuts = "[SPACE] Pause  [P] Palette  [C] CRT  [+/-] Speed  [M] MonteCarlo  [1-5] Tabs  [R] Reset";
+    std::string shortcuts = "[SPACE] Pause [P] Pal [C] CRT [S] Audio [O] Conf [E] Telemetry [F/G/L] Factions [1-5] Tabs [R] Reset";
     BitmapFont::draw_string(fb, 6, 340, shortcuts, theme.text_dim, 0, true, 1);
 }
 
