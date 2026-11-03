@@ -39,11 +39,13 @@ void WorldEatersMechanic::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)enemy;
     (void)active_sector;
     (void)dt;
+    (void)is_defender;
     if (friendly.is_defeated()) return;
 
     // Determine Tithe Tier
@@ -118,10 +120,32 @@ void WorldEatersMechanic::on_casualty_event(
     if (tithe_tier >= 1 && event.is_friendly) {
         double retal_damage = event.units_killed * 12.0; // 12 damage per dead berserker
         spiteful_demise_damage_dealt += retal_damage;
+
+        // Distribute 100% of retaliation damage proportionally across living frontline units
+        std::vector<UnitClass*> frontline_targets;
+        double total_frontline_hp = 0.0;
         for (auto& u : enemy.units) {
             if (u.backline_ratio <= 0.5 && u.is_alive()) {
-                u.take_damage(retal_damage * 0.35);
-                break;
+                frontline_targets.push_back(&u);
+                total_frontline_hp += u.get_total_hp();
+            }
+        }
+
+        if (total_frontline_hp > 0.0) {
+            for (auto* u : frontline_targets) {
+                double share = retal_damage * (u->get_total_hp() / total_frontline_hp);
+                u->take_damage(share);
+            }
+        } else {
+            // If all frontline units are dead, distribute across remaining living enemy units
+            double total_enemy_hp = enemy.get_total_living_hp();
+            if (total_enemy_hp > 0.0) {
+                for (auto& u : enemy.units) {
+                    if (u.is_alive()) {
+                        double share = retal_damage * (u.get_total_hp() / total_enemy_hp);
+                        u.take_damage(share);
+                    }
+                }
             }
         }
     }
