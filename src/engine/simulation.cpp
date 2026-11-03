@@ -1,4 +1,5 @@
 #include "engine/simulation.hpp"
+#include "engine/telemetry_export.hpp"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -126,7 +127,6 @@ void SimulationEngine::update(double real_dt) {
                 outcome = SimulationOutcome::TYRANID_VICTORY;
                 outcome_banner = "[ANNIHILATION] SPIRE CITADEL OVERRUN. SECTOR CONQUERED.";
                 add_event(outcome_banner);
-                break;
             }
         }
 
@@ -135,19 +135,36 @@ void SimulationEngine::update(double real_dt) {
             outcome = SimulationOutcome::IMPERIAL_VICTORY;
             outcome_banner = "[VICTORY] ATTACKING HOST BROKEN! DEFENDERS HOLD THE WORLD!";
             add_event(outcome_banner);
-            break;
-        }
-
-        if (defenders.is_defeated()) {
+        } else if (defenders.is_defeated()) {
             outcome = SimulationOutcome::TYRANID_VICTORY;
             outcome_banner = "[DEFEAT] ALL DEFENDERS SLAIN. INVASION FORCE PREVAILS.";
             add_event(outcome_banner);
-            break;
-        }
-
-        if (orders.exterminatus_triggered) {
+        } else if (orders.exterminatus_triggered) {
             outcome = SimulationOutcome::EXTERMINATUS_PURGE;
             outcome_banner = "[PURGED] EXTERMINATUS COMPLETED. ZERO LIFE SIGNS REMAIN.";
+            add_event(outcome_banner);
+        }
+
+        if (outcome != SimulationOutcome::IN_PROGRESS) {
+            TelemetryExport::export_battle_json(
+                "bin/battle_telemetry.json",
+                defenders,
+                attackers,
+                cur_sec,
+                logistics,
+                sim_time_seconds,
+                outcome_banner
+            );
+            TelemetryExport::export_forensic_log(
+                "bin/battle_forensic.log",
+                defenders,
+                attackers,
+                cur_sec,
+                logistics,
+                sim_time_seconds,
+                outcome_banner
+            );
+            add_event("[TELEMETRY] BATTLE ARCHIVED TO bin/battle_telemetry.json");
             break;
         }
     }
