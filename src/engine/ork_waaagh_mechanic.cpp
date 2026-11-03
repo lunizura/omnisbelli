@@ -44,10 +44,12 @@ void OrkWaaaghMechanic::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)enemy;
     (void)active_sector;
+    (void)is_defender;
     if (friendly.is_defeated() || dt <= 0.0) return;
 
     if (waaagh_frenzy_active) {
@@ -97,12 +99,16 @@ double OrkWaaaghMechanic::apply_incoming_mitigation(
     (void)dt;
     if (friendly.is_defeated() || incoming_raw_damage <= 0.0) return incoming_raw_damage;
 
-    // Grot Shields: Meatshield absorbs 20% of incoming anti-armor fire
-    UnitClass* boyz = friendly.find_unit("ork_boyz");
-    if (boyz && boyz->is_alive() && boyz->count > 10000.0) {
-        double absorbed = incoming_raw_damage * 0.20;
+    UnitClass* grots = friendly.find_unit("grots");
+    if (!grots) grots = friendly.find_unit("gretchin");
+
+    if (grots && grots->is_alive()) {
+        double max_absorb = incoming_raw_damage * 0.20;
+        double available_hp = grots->get_total_hp();
+        double absorbed = std::min(max_absorb, available_hp);
         grot_shields_absorbed_damage += absorbed;
-        return incoming_raw_damage * 0.80;
+        grots->take_damage(absorbed);
+        return incoming_raw_damage - absorbed;
     }
 
     return incoming_raw_damage;

@@ -251,6 +251,14 @@ ArmyRoster ArmyRoster::create_ork_waaagh(double scale) {
     ArmyRoster roster("orks", "WAAAGH! Ghazghkull Planetary Invasion");
 
     roster.add_unit(UnitClass(
+        "grots", "Gretchin Mob (Grot Shields)", "orks",
+        UnitCategory::INFANTRY,
+        15000000.0 * scale, 5.0, 0.0, 0.5, 1.0, 0.4, 0.0,
+        TargetPriority::PRIORITY_BALANCED,
+        false, 0.0
+    ));
+
+    roster.add_unit(UnitClass(
         "ork_boyz", "Ork Boyz Mob", "orks",
         UnitCategory::INFANTRY,
         45000000.0 * scale, 12.0, 0.10, 2.0, 1.0, 0.8, 0.0,
