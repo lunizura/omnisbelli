@@ -37,7 +37,8 @@ public:
         ArmyRoster& friendly,
         ArmyRoster& enemy,
         Sector& active_sector,
-        double dt
+        double dt,
+        bool is_defender = false
     ) = 0;
 
     // Modifies outgoing weapon damage before armor mitigation (e.g. Canticles, Holy Trinity)
@@ -92,7 +93,8 @@ public:
         ArmyRoster& friendly,
         ArmyRoster& enemy,
         Sector& active_sector,
-        double dt
+        double dt,
+        bool is_defender = false
     ) override;
 
     void reset() override {}
@@ -114,7 +116,8 @@ public:
         ArmyRoster& friendly,
         ArmyRoster& enemy,
         Sector& active_sector,
-        double dt
+        double dt,
+        bool is_defender = false
     ) override;
 
     void modify_outgoing_damage(

@@ -22,7 +22,8 @@ public:
         ArmyRoster& friendly,
         ArmyRoster& enemy,
         Sector& active_sector,
-        double dt
+        double dt,
+        bool is_defender = false
     ) override;
 
     void modify_outgoing_damage(

@@ -49,10 +49,12 @@ void NecronDynastyMechanic::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)enemy;
     (void)active_sector;
+    (void)is_defender;
     if (friendly.is_defeated() || dt <= 0.0) return;
 
     // Check Phase-Out condition: if army drops below 25% initial strength

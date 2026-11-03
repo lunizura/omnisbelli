@@ -31,7 +31,8 @@ void DeathGuardMechanic::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     if (dt <= 0.0 || friendly.is_defeated()) return;
 
@@ -47,8 +48,8 @@ void DeathGuardMechanic::pre_combat_tick(
         (contested_seconds_in_sector / 240.0) + (0.35 * survival_ratio)
     );
 
-    // Corrode active sector fortification cover
-    if (active_sector.fortification_cover > 0.10) {
+    // Corrode active sector fortification cover (only when attacking enemy fortifications)
+    if (!is_defender && active_sector.fortification_cover > 0.10) {
         double corrosion = 0.002 * contagion_intensity * dt;
         active_sector.fortification_cover = std::max(0.10, active_sector.fortification_cover - corrosion);
         sector_rot_corrosion_pct += corrosion * 100.0;

@@ -24,12 +24,14 @@ void GenericFactionModule::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)friendly;
     (void)enemy;
     (void)active_sector;
     (void)dt;
+    (void)is_defender;
 }
 
 TyranidSynapseModule::TyranidSynapseModule(const SynapseNetwork& net)
@@ -51,10 +53,12 @@ void TyranidSynapseModule::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)enemy;
     (void)active_sector;
+    (void)is_defender;
     synapse.update(friendly, dt);
 }
 

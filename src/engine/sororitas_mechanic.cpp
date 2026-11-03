@@ -37,9 +37,11 @@ void SororitasMechanic::pre_combat_tick(
     ArmyRoster& friendly,
     ArmyRoster& enemy,
     Sector& active_sector,
-    double dt
+    double dt,
+    bool is_defender
 ) {
     (void)enemy;
+    (void)is_defender;
     if (dt <= 0.0 || friendly.is_defeated()) return;
 
     // Timer for active divine shield
