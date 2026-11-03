@@ -1,5 +1,7 @@
 #include "ui/input_handler.hpp"
 #include "gfx/audio_sfx.hpp"
+#include "engine/telemetry_export.hpp"
+#include "engine/config_loader.hpp"
 
 namespace omnisbelli {
 
@@ -33,6 +35,48 @@ bool InputHandler::handle_key_down(
         sim.run_planetary_projection(40);
         return true;
 
+    case 'S':
+        AudioSFX::toggle_sound();
+        sim.add_event(AudioSFX::enabled ? "[AUDIO] SOUND SFX ENABLED." : "[AUDIO] SOUND SFX DISABLED.");
+        return true;
+
+    case 'E': {
+        bool ok_json = TelemetryExport::export_battle_json(
+            "bin/battle_telemetry.json",
+            sim.defenders,
+            sim.attackers,
+            sim.sector_graph.get_active_sector(),
+            sim.logistics,
+            sim.sim_time_seconds,
+            sim.outcome_banner
+        );
+        bool ok_log = TelemetryExport::export_forensic_log(
+            "bin/battle_forensic.log",
+            sim.defenders,
+            sim.attackers,
+            sim.sector_graph.get_active_sector(),
+            sim.logistics,
+            sim.sim_time_seconds,
+            sim.outcome_banner
+        );
+        if (ok_json && ok_log) {
+            sim.add_event("[TELEMETRY] EXPORTED TO bin/battle_telemetry.json & bin/battle_forensic.log");
+        } else {
+            sim.add_event("[ERROR] FAILED TO EXPORT TELEMETRY.");
+        }
+        return true;
+    }
+
+    case 'O': {
+        bool ok = ConfigLoader::load_simulation_config("data/siege_config.json", sim);
+        if (ok) {
+            sim.add_event("[CONFIG] RELOADED FROM data/siege_config.json");
+        } else {
+            sim.add_event("[ERROR] FAILED TO RELOAD CONFIG FROM data/siege_config.json");
+        }
+        return true;
+    }
+
     case VK_TAB:
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
             ui.customizer_toggle_side();
@@ -41,43 +85,49 @@ bool InputHandler::handle_key_down(
         }
         return true;
 
-    case 'F':
-        if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            static const char* defender_factions[] = {
-                "imperium", "death_guard", "sororitas", "mechanicus",
-                "world_eaters", "krieg", "iron_warriors", "custodes"
-            };
-            static int def_idx = 0;
-            def_idx = (def_idx + 1) % 8;
-            sim.set_defender_faction(defender_factions[def_idx]);
-            ui.customizer_selected_index = 0;
-            return true;
+    case 'F': {
+        static const char* defender_factions[] = {
+            "imperium", "death_guard", "sororitas", "mechanicus",
+            "world_eaters", "krieg", "iron_warriors", "custodes"
+        };
+        int cur_idx = -1;
+        for (int i = 0; i < 8; ++i) {
+            if (sim.defenders.faction_id == defender_factions[i]) {
+                cur_idx = i;
+                break;
+            }
         }
-        break;
+        int next_idx = (cur_idx + 1) % 8;
+        sim.set_defender_faction(defender_factions[next_idx]);
+        ui.customizer_selected_index = 0;
+        return true;
+    }
 
-    case 'G':
-        if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            static const char* attacker_factions[] = {
-                "tyranids", "death_guard", "world_eaters", "sororitas",
-                "mechanicus", "orks", "necrons", "iron_warriors"
-            };
-            static int att_idx = 0;
-            att_idx = (att_idx + 1) % 8;
-            sim.set_attacker_faction(attacker_factions[att_idx]);
-            ui.customizer_selected_index = 0;
-            return true;
+    case 'G': {
+        static const char* attacker_factions[] = {
+            "tyranids", "death_guard", "world_eaters", "sororitas",
+            "mechanicus", "orks", "necrons", "iron_warriors"
+        };
+        int cur_idx = -1;
+        for (int i = 0; i < 8; ++i) {
+            if (sim.attackers.faction_id == attacker_factions[i]) {
+                cur_idx = i;
+                break;
+            }
         }
-        break;
+        int next_idx = (cur_idx + 1) % 8;
+        sim.set_attacker_faction(attacker_factions[next_idx]);
+        ui.customizer_selected_index = 0;
+        return true;
+    }
 
-    case 'L':
-        if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
-            static int preset_cursor = 0;
-            preset_cursor = (preset_cursor + 1) % 10;
-            sim.load_scenario(preset_cursor);
-            ui.customizer_selected_index = 0;
-            return true;
-        }
-        break;
+    case 'L': {
+        static int preset_cursor = 0;
+        preset_cursor = (preset_cursor + 1) % 10;
+        sim.load_scenario(preset_cursor);
+        ui.customizer_selected_index = 0;
+        return true;
+    }
 
     case '6':
         if (ui.active_tab == ActiveScreenTab::TAB_CUSTOMIZER) {
@@ -150,7 +200,9 @@ bool InputHandler::handle_key_down(
         sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
         return true;
     case VK_F2:
-        sim.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY);
+        if (sim.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY)) {
+            AudioSFX::play_plasma_cannon();
+        }
         return true;
     case VK_F3:
         sim.trigger_doctrine(DoctrineType::ASTARTES_DROP_POD);
@@ -162,7 +214,9 @@ bool InputHandler::handle_key_down(
         sim.trigger_doctrine(DoctrineType::ORBITAL_LANCE_STRIKE);
         return true;
     case VK_F8:
-        sim.trigger_doctrine(DoctrineType::EXTERMINATUS_PROTOCOL);
+        if (sim.trigger_doctrine(DoctrineType::EXTERMINATUS_PROTOCOL)) {
+            AudioSFX::play_exterminatus_siren();
+        }
         return true;
 
     // Customizer navigation
@@ -204,6 +258,7 @@ bool InputHandler::handle_mouse_click(
     UIManager& ui
 ) {
     if (virtual_x < 0 || virtual_y < 0) return false;
+    AudioSFX::play_relay_click();
 
     // Header bar tab clicks
     if (virtual_y >= 0 && virtual_y <= 24) {
@@ -236,7 +291,9 @@ bool InputHandler::handle_mouse_click(
                 sim.trigger_doctrine(DoctrineType::IGNITE_PROMETHIUM_MOAT);
                 return true;
             } else if (virtual_x >= 113 && virtual_x < 213) {
-                sim.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY);
+                if (sim.trigger_doctrine(DoctrineType::TITAN_PLASMA_VOLLEY)) {
+                    AudioSFX::play_plasma_cannon();
+                }
                 return true;
             } else if (virtual_x >= 218 && virtual_x < 318) {
                 sim.trigger_doctrine(DoctrineType::ASTARTES_DROP_POD);
@@ -252,7 +309,9 @@ bool InputHandler::handle_mouse_click(
                 sim.trigger_doctrine(DoctrineType::ORBITAL_LANCE_STRIKE);
                 return true;
             } else if (virtual_x >= 218 && virtual_x < 318) {
-                sim.trigger_doctrine(DoctrineType::EXTERMINATUS_PROTOCOL);
+                if (sim.trigger_doctrine(DoctrineType::EXTERMINATUS_PROTOCOL)) {
+                    AudioSFX::play_exterminatus_siren();
+                }
                 return true;
             }
         }
