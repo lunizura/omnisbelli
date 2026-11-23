@@ -3,6 +3,7 @@
 #include <cmath>
 #include <string>
 #include <cstdlib>
+#include <iterator>
 #include "engine/unit_class.hpp"
 #include "engine/army_roster.hpp"
 #include "engine/logistics.hpp"

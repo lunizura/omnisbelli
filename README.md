@@ -1,5 +1,11 @@
 # OMNISBELLI // Planetary Siege Engine
-> **A Macro-Scale Macroscopic Warfare Simulator & Tactical Command Cogitator**  
+
+[![CI](https://github.com/lunizura/omnisbelli/actions/workflows/ci.yml/badge.svg)](https://github.com/lunizura/omnisbelli/actions/workflows/ci.yml)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C?style=flat-square&logo=cplusplus)](CMakeLists.txt)
+[![Sanitizers](https://img.shields.io/badge/Sanitizers-ASan%20%2B%20UBSan-brightgreen?style=flat-square)](.github/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+> **A Macro-Scale Warfare Simulator & Tactical Command Cogitator**  
 > *Forge World Tarsus Defense: 2,000,000 Imperial Defenders vs 100,000,000 Tyranid Swarm Biomass*
 
 ```
@@ -27,7 +33,7 @@
 
 ## 1. Tactical Overview
 
-**Omnisbelli** is a high-performance macro-scale macroscopic planetary combat simulator written in **Modern C++17/C++20** with **zero external library dependencies**.
+**Omnisbelli** is a high-performance macro-scale planetary combat simulator written in **Modern C++17/C++20** with **zero external library dependencies**.
 
 Rather than simulating small skirmishes or grinding individual entities to a halt, the engine models macroscopic warfare involving **hundreds of millions of combatants** using:
 - **Lanchester's Combat Laws** (Square Law in open ash wastes vs. Linear Law in narrow fortress gates and trench chokepoints).
@@ -191,7 +197,7 @@ Produces `bin\omnisbelli.exe` and `bin\test_simulation.exe`.
 ```cmd
 test.bat
 ```
-Verifies all 30 simulation test suites (Lanchester square vs linear laws, Synapse disruption, munitions depletion, sector fallback cascades, Monte Carlo forecasting, FNP & Contagion decay, Canticles, Miracle Dice, Blood Tithe, Ork WAAAGH! & Dakkadakka, Necron Reanimation & Living Metal, T'au Markerlights & Stances, Custodes Ka'tah, Faction Command Doctrines, JSON Config Customizer, and cross-faction doctrine coupling).
+Verifies all 34 simulation test suites (Lanchester square vs linear laws, Synapse disruption, munitions depletion, sector fallback cascades, Monte Carlo forecasting, FNP & Contagion decay, Canticles, Miracle Dice, Blood Tithe, Ork WAAAGH! & Dakkadakka, Necron Reanimation & Living Metal, T'au Markerlights & Stances, Custodes Ka'tah, Faction Command Doctrines, JSON Config Customizer, and cross-faction doctrine coupling).
 
 ### Run Application
 ```cmd
@@ -206,6 +212,6 @@ cmake --build build --config Release
 
 ---
 
-## 8. License
+## 9. License
 Omnisbelli is distributed under the MIT License.
 Forged for planetary defense cogitators of the Imperium of Man.

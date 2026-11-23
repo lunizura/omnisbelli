@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/army_roster.hpp"
 #include "engine/sector.hpp"
+#include <algorithm>
 
 namespace omnisbelli {
 

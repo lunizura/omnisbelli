@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configure CMake
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -25,3 +25,29 @@ jobs:
       - name: Run Simulation Test Suite
         working-directory: build
         run: ctest -C Release --output-on-failure
+
+  engine-linux-sanitizers:
+    name: Engine Tests (Ubuntu Clang ASan+UBSan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure Engine Tests with Sanitizers
+        run: |
+          cmake -B build-asan \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build test_simulation
+        run: cmake --build build-asan --target test_simulation
+
+      - name: Run CTest under ASan+UBSan
+        working-directory: build-asan
+        env:
+          ASAN_OPTIONS: "detect_leaks=1:abort_on_error=1"
+          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        run: ctest --output-on-failure

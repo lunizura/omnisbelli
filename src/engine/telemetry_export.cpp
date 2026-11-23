@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <filesystem>
+#include <cstdint>
 
 namespace omnisbelli {
 

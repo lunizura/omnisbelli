@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(omnisbelli VERSION 1.0.0 LANGUAGES CXX)
+project(omnisbelli VERSION 1.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,7 +10,9 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 else()
     add_compile_options(-Wall -Wextra -O2)
-    add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+    if(WIN32)
+        add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+    endif()
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -51,15 +53,14 @@ set(UI_SOURCES
     src/ui/input_handler.cpp
 )
 
-# Main Application
-add_executable(omnisbelli WIN32
-    src/main.cpp
-    ${ENGINE_SOURCES}
-    ${GFX_SOURCES}
-    ${UI_SOURCES}
-)
-
+# Main Application (Windows Win32 GDI Frontend)
 if(WIN32)
+    add_executable(omnisbelli WIN32
+        src/main.cpp
+        ${ENGINE_SOURCES}
+        ${GFX_SOURCES}
+        ${UI_SOURCES}
+    )
     target_link_libraries(omnisbelli PRIVATE user32 gdi32)
 endif()
 
